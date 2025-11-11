@@ -1,0 +1,240 @@
+{
+  "tcp": {
+    "send_data": [
+      {
+        "data": "AA 05 02 0C 22 03 61 64 6D 69 6E 0A 31 32 33 34 35 36",
+        "interval": "1000",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "AA 04 02 0A 22 01 12 34 01 02 03 04 05 06 07 08",
+        "interval": "1000",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "1000",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "1000",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "1000",
+        "auto_send": false,
+        "format": "HEX"
+      }
+    ],
+    "pane_ratio": 0.2728047740835465,
+    "show_timestamp": true,
+    "mode": "客户端",
+    "host_history": [
+      "192.168.4.1"
+    ],
+    "port_history": [
+      "5000"
+    ],
+    "last_host": "192.168.4.1",
+    "last_port": "5000",
+    "max_clients": "5"
+  },
+  "udp": {
+    "send_data": [
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      }
+    ],
+    "pane_ratio": 0.5,
+    "show_timestamp": false,
+    "mode": "客户端",
+    "local_host_history": [],
+    "local_port_history": [],
+    "remote_host_history": [],
+    "remote_port_history": [],
+    "last_local_host": "",
+    "last_local_port": "",
+    "last_remote_host": "",
+    "last_remote_port": "",
+    "broadcast": false,
+    "multicast": false,
+    "multicast_group": "224.1.1.1"
+  },
+  "serial": {
+    "send_data": [
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      }
+    ],
+    "pane_ratio": 0.5,
+    "show_timestamp": false,
+    "port": "COM1",
+    "baud": "9600",
+    "databits": "8",
+    "parity": "None",
+    "stopbits": "1"
+  },
+  "rs485": {
+    "send_data": [
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      }
+    ],
+    "pane_ratio": 0.5,
+    "show_timestamp": false,
+    "port": "COM1",
+    "baud": "9600",
+    "auto_crc": false
+  },
+  "crc": {
+    "algorithm": "CRC-8",
+    "input": "\n\n\n\n",
+    "pane_ratio": 0.49921259842519683
+  },
+  "format": "HEX",
+  "ui": {
+    "send_font": {
+      "family": "Consolas",
+      "size": 11
+    },
+    "recv_font": {
+      "family": "Consolas",
+      "size": 15
+    }
+  },
+  "window": {
+    "size": [
+      1200,
+      800
+    ],
+    "pos": [
+      359,
+      206
+    ],
+    "is_maximized": false
+  },
+  "esp32_log": {
+    "send_data": [
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      },
+      {
+        "data": "",
+        "interval": "",
+        "auto_send": false,
+        "format": "HEX"
+      }
+    ],
+    "pane_ratio": 0.05,
+    "show_timestamp": false,
+    "port": "COM5"
+  }
+}
