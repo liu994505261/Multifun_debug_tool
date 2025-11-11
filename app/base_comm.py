@@ -92,6 +92,11 @@ class BaseCommTab(QtWidgets.QWidget):
         self.recv_text = QtWidgets.QTextEdit()
         self.recv_text.setReadOnly(True)
         right_group_layout.addWidget(self.recv_text)
+        # 安装滚轮事件过滤器：向上滚动时自动关闭自动滚动
+        try:
+            self.recv_text.viewport().installEventFilter(self)
+        except Exception:
+            pass
 
         stats_bar = QtWidgets.QHBoxLayout()
         stats_bar.setContentsMargins(0, 0, 0, 0)
@@ -239,6 +244,39 @@ class BaseCommTab(QtWidgets.QWidget):
 
     def _on_send_clicked(self, idx: int):
         pass
+
+    def eventFilter(self, obj, event):
+        try:
+            # 在自动滚动开启时，用户向上滚动立即关闭自动滚动
+            if getattr(self, 'recv_text', None) and obj == self.recv_text.viewport():
+                if isinstance(event, QtGui.QWheelEvent):
+                    delta = 0
+                    try:
+                        ad = event.angleDelta()
+                        delta = int(getattr(ad, 'y', lambda: 0)() if callable(getattr(ad, 'y', None)) else ad.y())
+                    except Exception:
+                        pass
+                    if delta == 0:
+                        try:
+                            pd = event.pixelDelta()
+                            delta = int(getattr(pd, 'y', lambda: 0)() if callable(getattr(pd, 'y', None)) else pd.y())
+                        except Exception:
+                            pass
+                    if delta > 0 and getattr(self, 'auto_scroll_cb', None) and self.auto_scroll_cb.isChecked():
+                        self.auto_scroll_cb.setChecked(False)
+                    elif delta < 0 and getattr(self, 'auto_scroll_cb', None):
+                        # 向下滚动后，如果滚动条到达最底部，自动开启自动滚动
+                        def _check_bottom():
+                            try:
+                                sb = self.recv_text.verticalScrollBar()
+                                if sb and sb.value() >= sb.maximum():
+                                    self.auto_scroll_cb.setChecked(True)
+                            except Exception:
+                                pass
+                        QtCore.QTimer.singleShot(0, _check_bottom)
+            return super().eventFilter(obj, event)
+        except Exception:
+            return False
 
     def get_config(self) -> dict:
         sizes = self.splitter.sizes()
