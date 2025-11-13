@@ -159,7 +159,8 @@ class ESP32LogTab(BaseCommTab):
 
                 self.right_splitter.addWidget(self.search_result_panel)
                 right_layout.insertWidget(0, self.right_splitter)
-                QtCore.QTimer.singleShot(100, lambda: self.right_splitter.setSizes([1, 0]))
+                # 初始隐藏查找结果面板
+                self.search_result_panel.setVisible(False)
 
                 # 列表点击跳转
                 self.search_result_list.itemActivated.connect(self._jump_from_item)
@@ -173,6 +174,10 @@ class ESP32LogTab(BaseCommTab):
         self.search_btn.clicked.connect(self._search_logs)
 
         self.log_batch_received.connect(self._update_log_from_batch)
+        
+        # 为接收区域设置右键菜单
+        self.recv_text.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.recv_text.customContextMenuRequested.connect(self._show_recv_context_menu)
 
         self._refresh_ports()
         self._install_autosave_hooks()
@@ -309,6 +314,10 @@ class ESP32LogTab(BaseCommTab):
                 item.setData(QtCore.Qt.ItemDataRole.UserRole, (r['start'], r['end']))
                 self.search_result_list.addItem(item)
 
+            # 显示查找结果面板
+            if hasattr(self, 'search_result_panel'):
+                self.search_result_panel.setVisible(True)
+            
             # 展示右侧面板宽度（约 30% 或至少 280px）
             sizes = self.right_splitter.sizes() if hasattr(self, 'right_splitter') else []
             total = sum(sizes) or 1000
@@ -363,13 +372,8 @@ class ESP32LogTab(BaseCommTab):
             pass
         try:
             self.recv_text.setExtraSelections([])
-            # 收起右侧结果面板并清空内容
-            if hasattr(self, 'right_splitter'):
-                self.right_splitter.setSizes([1, 0])
-            if hasattr(self, 'search_result_list'):
-                self.search_result_list.clear()
-            if hasattr(self, 'search_result_label'):
-                self.search_result_label.setText('查找结果')
+            # 隐藏查找结果面板
+            self._hide_search_panel()
         except Exception:
             pass
 
@@ -440,6 +444,45 @@ class ESP32LogTab(BaseCommTab):
         
         if current_port and self.port_combo.findText(current_port) != -1:
             self.port_combo.setCurrentText(current_port)
+
+    def _show_recv_context_menu(self, pos):
+        """显示接收区域的右键菜单"""
+        menu = QtWidgets.QMenu(self.recv_text)
+        
+        # 清空内容选项
+        clear_action = menu.addAction('清空内容')
+        clear_action.triggered.connect(self._clear_recv_content)
+        
+        # 关闭查找结果框选项（仅在查找结果面板可见时显示）
+        if self._is_search_panel_visible():
+            menu.addSeparator()
+            close_search_action = menu.addAction('关闭查找结果框')
+            close_search_action.triggered.connect(self._hide_search_panel)
+        
+        # 在鼠标位置显示菜单
+        menu.exec(self.recv_text.mapToGlobal(pos))
+    
+    def _clear_recv_content(self):
+        """清空接收区域的内容"""
+        self.recv_text.clear()
+        # 同时清除搜索高亮
+        self._clear_search_highlight()
+    
+    def _is_search_panel_visible(self):
+        """检查查找结果面板是否可见"""
+        if not hasattr(self, 'search_result_panel'):
+            return False
+        return self.search_result_panel.isVisible()
+    
+    def _hide_search_panel(self):
+        """隐藏查找结果面板"""
+        if hasattr(self, 'search_result_panel'):
+            self.search_result_panel.setVisible(False)
+        # 清空查找结果
+        if hasattr(self, 'search_result_list'):
+            self.search_result_list.clear()
+        if hasattr(self, 'search_result_label'):
+            self.search_result_label.setText('查找结果')
 
     def shutdown(self):
         super().shutdown()
