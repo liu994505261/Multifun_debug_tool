@@ -77,11 +77,12 @@ class LogSearchHighlighter(QtGui.QSyntaxHighlighter):
 class ESP32LogTab(BaseCommTab):
     log_batch_received = QtCore.Signal(list)
 
-    def __init__(self, get_global_format, parent=None):
+    def __init__(self, get_global_format, get_serial_blacklist=None, parent=None):
         super().__init__(get_global_format, parent)
         self.serial = None
         self.read_thread = None
         self.running = False
+        self.get_serial_blacklist = get_serial_blacklist or (lambda: [])
 
         # 串口配置
         self.top_group.setTitle('ESP32 日志')
@@ -206,7 +207,20 @@ class ESP32LogTab(BaseCommTab):
 
     def load_config(self, cfg: dict):
         super().load_config(cfg)
-        self.port_combo.setCurrentText(cfg.get('port', ''))
+        try:
+            last_port = cfg.get('port', '')
+            if last_port:
+                matched = False
+                for i in range(self.port_combo.count()):
+                    if self.port_combo.itemData(i) == last_port:
+                        self.port_combo.setCurrentIndex(i)
+                        matched = True
+                        break
+                if not matched:
+                    self.port_combo.insertItem(0, str(last_port), str(last_port))
+                    self.port_combo.setCurrentIndex(0)
+        except Exception:
+            pass
         self.baud_combo.setCurrentText(cfg.get('baudrate', '115200'))
         log_levels = cfg.get('log_levels', {})
         for level, checkbox in self.log_level_checks.items():
@@ -215,7 +229,7 @@ class ESP32LogTab(BaseCommTab):
     def get_config(self) -> dict:
         cfg = super().get_config()
         cfg.update({
-            'port': self.port_combo.currentText(),
+            'port': self.port_combo.currentData() or self.port_combo.currentText(),
             'baudrate': self.baud_combo.currentText(),
             'log_levels': {level: checkbox.isChecked() for level, checkbox in self.log_level_checks.items()},
         })
@@ -229,7 +243,7 @@ class ESP32LogTab(BaseCommTab):
             self.baud_combo.setEnabled(True)
             return
 
-        port = self.port_combo.currentText()
+        port = self.port_combo.currentData() or self.port_combo.currentText()
         if not port:
             return
 
@@ -436,14 +450,25 @@ class ESP32LogTab(BaseCommTab):
             self.serial = None
 
     def _refresh_ports(self):
-        current_port = self.port_combo.currentText()
+        current_port = self.port_combo.currentData() or self.port_combo.currentText()
         self.port_combo.clear()
+        bl = []
+        try:
+            bl = list(self.get_serial_blacklist() or [])
+        except Exception:
+            bl = []
         ports = serial.tools.list_ports.comports()
-        for port in ports:
-            self.port_combo.addItem(port.device)
+        for info in ports:
+            if info.device in bl:
+                continue
+            label = f"{info.device} - {getattr(info, 'description', None) or getattr(info, 'hwid', '')}"
+            self.port_combo.addItem(label, info.device)
         
-        if current_port and self.port_combo.findText(current_port) != -1:
-            self.port_combo.setCurrentText(current_port)
+        if current_port:
+            for i in range(self.port_combo.count()):
+                if self.port_combo.itemData(i) == current_port:
+                    self.port_combo.setCurrentIndex(i)
+                    break
 
     def _show_recv_context_menu(self, pos):
         """显示接收区域的右键菜单"""

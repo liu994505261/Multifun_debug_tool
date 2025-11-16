@@ -12,10 +12,11 @@ except Exception:
 
 
 class SerialDebugTabQt(BaseCommTab):
-    def __init__(self, get_global_format, parent=None):
+    def __init__(self, get_global_format, get_serial_blacklist=None, parent=None):
         super().__init__(get_global_format, parent)
         self.ser = None
         self.running = False
+        self.get_serial_blacklist = get_serial_blacklist or (lambda: [])
         self.top_group.setTitle('串口配置')
 
         row1 = QtWidgets.QWidget()
@@ -86,9 +87,17 @@ class SerialDebugTabQt(BaseCommTab):
             self._log('串口库不可用', 'red')
             return
         try:
-            ports = [p.device for p in serial.tools.list_ports.comports()]
+            bl = []
+            try:
+                bl = list(self.get_serial_blacklist() or [])
+            except Exception:
+                bl = []
             self.port_combo.clear()
-            self.port_combo.addItems(ports)
+            for info in serial.tools.list_ports.comports():
+                if info.device in bl:
+                    continue
+                label = f"{info.device} - {getattr(info, 'description', None) or getattr(info, 'hwid', '')}"
+                self.port_combo.addItem(label, info.device)
         except Exception as e:
             self._log(f'刷新失败: {e}', 'red')
 
@@ -97,7 +106,7 @@ class SerialDebugTabQt(BaseCommTab):
             self._log('串口库不可用', 'red')
             return
         try:
-            port = self.port_combo.currentText()
+            port = self.port_combo.currentData() or self.port_combo.currentText()
             baud = int(self.baud_combo.currentText())
             self.ser = serial.Serial(port=port, baudrate=baud, timeout=0.2)
             self.running = True
@@ -174,7 +183,7 @@ class SerialDebugTabQt(BaseCommTab):
         cfg = super().get_config()
         try:
             cfg.update({
-                'port': self.port_combo.currentText(),
+                'port': self.port_combo.currentData() or self.port_combo.currentText(),
                 'baud': self.baud_combo.currentText(),
                 'databits': self.databits_combo.currentText(),
                 'parity': self.parity_combo.currentText(),
@@ -189,10 +198,15 @@ class SerialDebugTabQt(BaseCommTab):
         try:
             last_port = cfg.get('port')
             if last_port:
-                items = [self.port_combo.itemText(i) for i in range(self.port_combo.count())]
-                if last_port not in items:
-                    self.port_combo.insertItem(0, last_port)
-                self.port_combo.setCurrentText(last_port)
+                matched = False
+                for i in range(self.port_combo.count()):
+                    if self.port_combo.itemData(i) == last_port:
+                        self.port_combo.setCurrentIndex(i)
+                        matched = True
+                        break
+                if not matched:
+                    self.port_combo.insertItem(0, str(last_port), str(last_port))
+                    self.port_combo.setCurrentIndex(0)
             self.baud_combo.setCurrentText(str(cfg.get('baud', self.baud_combo.currentText())))
             self.databits_combo.setCurrentText(str(cfg.get('databits', self.databits_combo.currentText())))
             self.parity_combo.setCurrentText(str(cfg.get('parity', self.parity_combo.currentText())))

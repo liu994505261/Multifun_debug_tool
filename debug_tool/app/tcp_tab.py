@@ -38,6 +38,8 @@ class TCPClientTabQt(BaseCommTab):
         self.status_label = QtWidgets.QLabel('未连接')
         self.status_label.setStyleSheet('color: red;')
         row1_layout.addWidget(self.status_label)
+        self.limit_display_cb = QtWidgets.QCheckBox('不显示接收')
+        row1_layout.addWidget(self.limit_display_cb)
         row1_layout.addStretch(1)
         self.top_vbox.addWidget(row1)
 
@@ -84,8 +86,14 @@ class TCPClientTabQt(BaseCommTab):
             self.port_combo.editTextChanged.connect(lambda _t: self.changed.emit())
             self.port_combo.currentIndexChanged.connect(lambda _i: self.changed.emit())
             self.max_clients_edit.textChanged.connect(lambda _t: self.changed.emit())
+            self.limit_display_cb.toggled.connect(lambda _c: self._on_limit_toggled(_c))
+            self.limit_display_cb.toggled.connect(lambda _c: self.changed.emit())
         except Exception:
             pass
+
+        self._display_limit_enabled = False
+        self._display_limit_max = 10 * 1024
+        self._displayed_bytes = 0
 
     def _toggle_connect(self):
         if self._connecting:
@@ -163,6 +171,7 @@ class TCPClientTabQt(BaseCommTab):
                 self.mode_server_rb.setEnabled(False)
                 self.status_label.setText('已连接')
                 self.status_label.setStyleSheet('color: green;')
+                self._displayed_bytes = 0
                 self._add_history(self.host_combo, host)
                 self._add_history(self.port_combo, str(port))
                 self.changed.emit()
@@ -267,6 +276,7 @@ class TCPClientTabQt(BaseCommTab):
         self.mode_server_rb.setEnabled(True)
         self.status_label.setText('未连接')
         self.status_label.setStyleSheet('color: red;')
+        self._displayed_bytes = 0
 
     def _add_history(self, combo: QtWidgets.QComboBox, value: str):
         try:
@@ -334,7 +344,15 @@ class TCPClientTabQt(BaseCommTab):
                     if not data:
                         break
                     self._update_recv_stats(len(data))
-                    self._log(self._format_recv(data), 'green')
+                    if self._display_limit_enabled:
+                        remain = self._display_limit_max - self._displayed_bytes
+                        if remain > 0:
+                            part = data[:max(0, remain)]
+                            if part:
+                                self._log(self._format_recv(part), 'green')
+                                self._displayed_bytes += len(part)
+                    else:
+                        self._log(self._format_recv(data), 'green')
                 except Exception as e:
                     if self.connected:
                         self._log(f'接收错误: {e}', 'red')
@@ -360,7 +378,15 @@ class TCPClientTabQt(BaseCommTab):
                 if not data:
                     break
                 self._update_recv_stats(len(data))
-                self._log(f'来自 {addr[0]}:{addr[1]}: ' + self._format_recv(data), 'green')
+                if self._display_limit_enabled:
+                    remain = self._display_limit_max - self._displayed_bytes
+                    if remain > 0:
+                        part = data[:max(0, remain)]
+                        if part:
+                            self._log(f'来自 {addr[0]}:{addr[1]}: ' + self._format_recv(part), 'green')
+                            self._displayed_bytes += len(part)
+                else:
+                    self._log(f'来自 {addr[0]}:{addr[1]}: ' + self._format_recv(data), 'green')
         except Exception as e:
             self._log(f'客户端错误: {e}', 'red')
         finally:
@@ -409,3 +435,11 @@ class TCPClientTabQt(BaseCommTab):
             self.addr_label.setText('监听地址:')
             self.max_clients_label.setVisible(True)
             self.max_clients_edit.setVisible(True)
+
+    def _on_limit_toggled(self, checked: bool):
+        try:
+            self._display_limit_enabled = bool(checked)
+            if self._display_limit_enabled:
+                self._displayed_bytes = 0
+        except Exception:
+            pass

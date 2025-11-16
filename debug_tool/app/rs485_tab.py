@@ -13,10 +13,11 @@ except Exception:
 
 
 class RS485TestTabQt(BaseCommTab):
-    def __init__(self, get_global_format, parent=None):
+    def __init__(self, get_global_format, get_serial_blacklist=None, parent=None):
         super().__init__(get_global_format, parent)
         self.ser = None
         self.running = False
+        self.get_serial_blacklist = get_serial_blacklist or (lambda: [])
         self.top_group.setTitle('RS485配置')
 
         row1 = QtWidgets.QWidget()
@@ -71,9 +72,17 @@ class RS485TestTabQt(BaseCommTab):
             self._log('串口库不可用', 'red')
             return
         try:
-            ports = [p.device for p in serial.tools.list_ports.comports()]
+            bl = []
+            try:
+                bl = list(self.get_serial_blacklist() or [])
+            except Exception:
+                bl = []
             self.port_combo.clear()
-            self.port_combo.addItems(ports)
+            for info in serial.tools.list_ports.comports():
+                if info.device in bl:
+                    continue
+                label = f"{info.device} - {getattr(info, 'description', None) or getattr(info, 'hwid', '')}"
+                self.port_combo.addItem(label, info.device)
         except Exception as e:
             self._log(f'刷新失败: {e}', 'red')
 
@@ -82,7 +91,7 @@ class RS485TestTabQt(BaseCommTab):
             self._log('串口库不可用', 'red')
             return
         try:
-            port = self.port_combo.currentText()
+            port = self.port_combo.currentData() or self.port_combo.currentText()
             baud = int(self.baud_combo.currentText())
             self.ser = serial.Serial(port=port, baudrate=baud, timeout=0.2)
             self.running = True
@@ -156,7 +165,7 @@ class RS485TestTabQt(BaseCommTab):
         cfg = super().get_config()
         try:
             cfg.update({
-                'port': self.port_combo.currentText(),
+                'port': self.port_combo.currentData() or self.port_combo.currentText(),
                 'baud': self.baud_combo.currentText(),
                 'auto_crc': self.auto_crc_cb.isChecked()
             })
@@ -169,10 +178,15 @@ class RS485TestTabQt(BaseCommTab):
         try:
             last_port = cfg.get('port')
             if last_port:
-                items = [self.port_combo.itemText(i) for i in range(self.port_combo.count())]
-                if last_port not in items:
-                    self.port_combo.insertItem(0, last_port)
-                self.port_combo.setCurrentText(last_port)
+                matched = False
+                for i in range(self.port_combo.count()):
+                    if self.port_combo.itemData(i) == last_port:
+                        self.port_combo.setCurrentIndex(i)
+                        matched = True
+                        break
+                if not matched:
+                    self.port_combo.insertItem(0, str(last_port), str(last_port))
+                    self.port_combo.setCurrentIndex(0)
             self.baud_combo.setCurrentText(str(cfg.get('baud', self.baud_combo.currentText())))
             self.auto_crc_cb.setChecked(bool(cfg.get('auto_crc', self.auto_crc_cb.isChecked())))
         except Exception:

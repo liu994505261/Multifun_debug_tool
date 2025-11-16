@@ -42,6 +42,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # 配置与状态
         self.config = self._load_config()
         self.global_format = self.config.get('format', 'ASCII')
+        self.serial_blacklist = list(self.config.get('serial_blacklist', []))
+        self.ui_theme = (self.config.get('ui', {}) or {}).get('theme', 'light')
 
         # 恢复窗口几何（位置/大小/最大化）
         try:
@@ -69,10 +71,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # 标签页：TCP / UDP / 串口 / RS485 / CRC / ESP32 Log
         self.tcp_tab = TCPClientTabQt(self.get_global_format)
         self.udp_tab = UDPCommTabQt(self.get_global_format)
-        self.serial_tab = SerialDebugTabQt(self.get_global_format)
-        self.rs485_tab = RS485TestTabQt(self.get_global_format)
+        self.serial_tab = SerialDebugTabQt(self.get_global_format, self.get_serial_blacklist)
+        self.rs485_tab = RS485TestTabQt(self.get_global_format, self.get_serial_blacklist)
         self.crc_tab = CRCTab(self.get_global_format)
-        self.esp32_log_tab = ESP32LogTab(self.get_global_format)
+        self.esp32_log_tab = ESP32LogTab(self.get_global_format, self.get_serial_blacklist)
 
         # 加载配置与应用字体
         self.tcp_tab.load_config(self.config.get('tcp', {}))
@@ -139,9 +141,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         settings_menu = menu.addMenu('设置')
         settings_menu.addAction('字体与大小...', self._show_font_settings)
+        settings_menu.addAction('串口黑名单...', self._show_serial_blacklist_settings)
+        self.dark_theme_action = QtGui.QAction('深色主题', self)
+        self.dark_theme_action.setCheckable(True)
+        self.dark_theme_action.setChecked(self.ui_theme == 'dark')
+        self.dark_theme_action.toggled.connect(self._on_dark_theme_toggled)
+        settings_menu.addAction(self.dark_theme_action)
 
         help_menu = menu.addMenu('帮助')
         help_menu.addAction('关于', self._show_about)
+
+        self._apply_theme(self.ui_theme)
 
     # 全局格式接口（给标签页调用）
     def get_global_format(self) -> str:
@@ -150,6 +160,45 @@ class MainWindow(QtWidgets.QMainWindow):
     def _on_format_changed(self, text: str):
         self.global_format = text
         self._schedule_save()
+        
+    def _apply_theme(self, theme: str):
+        qss_dark = """
+QWidget { background-color: #1e1e1e; color: #e0e0e0; }
+QGroupBox { border: 1px solid #3a3a3a; border-radius: 6px; margin-top: 6px; }
+QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; color: #c8c8c8; }
+QTabWidget::pane { border: 1px solid #3a3a3a; }
+QTabBar::tab { background: #2b2b2b; border: 1px solid #3a3a3a; border-bottom-color: #2b2b2b; padding: 6px 12px; margin-right: 2px; }
+QTabBar::tab:selected { background: #3b3b3b; color: #ffffff; }
+QTabBar::tab:hover { background: #343434; }
+QPushButton { background-color: #2d2d30; border: 1px solid #3a3a3a; border-radius: 4px; padding: 6px 12px; }
+QPushButton:hover { background-color: #3a3a3d; }
+QPushButton:pressed { background-color: #46464a; }
+QComboBox { background-color: #2d2d30; border: 1px solid #3a3a3a; border-radius: 4px; padding: 4px; }
+QComboBox QAbstractItemView { background-color: #2d2d30; selection-background-color: #3b3b3b; color: #e0e0e0; }
+QLineEdit, QPlainTextEdit, QTextEdit { background-color: #262626; border: 1px solid #3a3a3a; border-radius: 4px; color: #e6e6e6; }
+QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus { border: 1px solid #5a9bd5; }
+QCheckBox { spacing: 6px; }
+QCheckBox::indicator { width: 16px; height: 16px; }
+QSplitter::handle { background-color: #2b2b2b; }
+QMenuBar { background-color: #1e1e1e; }
+QMenuBar::item { background: transparent; padding: 6px 12px; }
+QMenuBar::item:selected { background: #343434; }
+QMenu { background-color: #2b2b2b; border: 1px solid #3a3a3a; }
+QMenu::item { padding: 6px 18px; }
+QMenu::item:selected { background-color: #3b3b3b; }
+QStatusBar { background: #1e1e1e; }
+"""
+        app = QtWidgets.QApplication.instance()
+        if app:
+            app.setStyleSheet(qss_dark if theme == 'dark' else '')
+
+    def _on_dark_theme_toggled(self, checked: bool):
+        self.ui_theme = 'dark' if checked else 'light'
+        self._apply_theme(self.ui_theme)
+        self._schedule_save()
+    
+    def get_serial_blacklist(self) -> list:
+        return list(self.serial_blacklist or [])
 
     # 字体读取辅助
     def _get_ui_font(self, key: str, default_family: str, default_size: int) -> QtGui.QFont:
@@ -186,6 +235,7 @@ class MainWindow(QtWidgets.QMainWindow):
         cfg = self._load_config()
         # 全局格式
         cfg['format'] = self.global_format
+        cfg['serial_blacklist'] = list(self.serial_blacklist or [])
         # UI 字体
         cfg.setdefault('ui', {})
         cfg['ui']['send_font'] = {
@@ -196,6 +246,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'family': self.recv_font.family(),
             'size': self.recv_font.pointSize()
         }
+        cfg['ui']['theme'] = self.ui_theme
         # 窗口几何
         try:
             is_max = self.isMaximized()
@@ -225,6 +276,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def _reload_config(self):
         self.config = self._load_config()
         self.global_format = self.config.get('format', 'ASCII')
+        self.serial_blacklist = list(self.config.get('serial_blacklist', []))
+        self.ui_theme = (self.config.get('ui', {}) or {}).get('theme', 'light')
         self.format_combo.setCurrentText(self.global_format)
         # 字体应用
         self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=12)
@@ -239,7 +292,63 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rs485_tab.load_config(self.config.get('rs485', {}))
         self.crc_tab.load_config(self.config.get('crc', {}))
         self.esp32_log_tab.load_config(self.config.get('esp32_log', {}))
+        self._apply_theme(self.ui_theme)
         self.statusBar().showMessage('配置已加载', 3000)
+
+    def _show_serial_blacklist_settings(self):
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle('串口黑名单')
+        layout = QtWidgets.QVBoxLayout(dlg)
+        info = QtWidgets.QLabel('屏蔽这些串口号，不在下拉列表显示')
+        layout.addWidget(info)
+        lst = QtWidgets.QListWidget()
+        for p in self.serial_blacklist:
+            lst.addItem(str(p))
+        layout.addWidget(lst)
+        btns = QtWidgets.QHBoxLayout()
+        add_btn = QtWidgets.QPushButton('添加')
+        del_btn = QtWidgets.QPushButton('删除选中')
+        btns.addWidget(add_btn)
+        btns.addWidget(del_btn)
+        btns.addStretch(1)
+        apply_btn = QtWidgets.QPushButton('应用')
+        cancel_btn = QtWidgets.QPushButton('取消')
+        btns.addWidget(apply_btn)
+        btns.addWidget(cancel_btn)
+        layout.addLayout(btns)
+        def do_add():
+            text, ok = QtWidgets.QInputDialog.getText(self, '添加黑名单', '串口号:')
+            if not ok:
+                return
+            t = (text or '').strip()
+            if not t:
+                return
+            if not lst.findItems(t, QtCore.Qt.MatchFlag.MatchExactly):
+                lst.addItem(t)
+        def do_del():
+            for it in lst.selectedItems():
+                lst.takeItem(lst.row(it))
+        def do_apply():
+            self.serial_blacklist = [lst.item(i).text() for i in range(lst.count())]
+            self._schedule_save()
+            try:
+                self.serial_tab._refresh_ports()
+            except Exception:
+                pass
+            try:
+                self.rs485_tab._refresh_ports()
+            except Exception:
+                pass
+            try:
+                self.esp32_log_tab._refresh_ports()
+            except Exception:
+                pass
+            dlg.accept()
+        add_btn.clicked.connect(do_add)
+        del_btn.clicked.connect(do_del)
+        apply_btn.clicked.connect(do_apply)
+        cancel_btn.clicked.connect(dlg.reject)
+        dlg.exec()
 
     # 字体设置
     def _show_font_settings(self):
