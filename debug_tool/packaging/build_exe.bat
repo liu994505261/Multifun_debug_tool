@@ -17,4 +17,6 @@ if not exist dist\TcpTool.exe (
 echo Build completed. Check: dist\TcpTool.exe
 popd
 
+pause
+
 endlocal

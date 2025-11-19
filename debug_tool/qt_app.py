@@ -98,6 +98,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.addTab(self.crc_tab, 'CRC计算')
         self.tabs.addTab(self.esp32_log_tab, 'ESP32 Log')
 
+        # 恢复上次打开的tab页面
+        last_tab = self.config.get('last_active_tab', 0)
+        if 0 <= last_tab < self.tabs.count():
+            self.tabs.setCurrentIndex(last_tab)
+
+        # 监听tab切换事件，自动保存
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+
         # 状态栏：格式选择 + 时间
         status = self.statusBar()
         status.showMessage('就绪')
@@ -159,6 +167,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _on_format_changed(self, text: str):
         self.global_format = text
+        self._schedule_save()
+
+    def _on_tab_changed(self, index: int):
+        """tab页面切换时保存当前索引"""
         self._schedule_save()
         
     def _apply_theme(self, theme: str):
@@ -236,6 +248,8 @@ QStatusBar { background: #1e1e1e; }
         # 全局格式
         cfg['format'] = self.global_format
         cfg['serial_blacklist'] = list(self.serial_blacklist or [])
+        # 保存当前打开的tab页面索引
+        cfg['last_active_tab'] = self.tabs.currentIndex()
         # UI 字体
         cfg.setdefault('ui', {})
         cfg['ui']['send_font'] = {
