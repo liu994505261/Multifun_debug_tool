@@ -26,6 +26,7 @@ from app.serial_tab import SerialDebugTabQt
 from app.rs485_tab import RS485TestTabQt
 from app.crc_tab import CRCTab
 from app.esp32_log_tab import ESP32LogTab
+from app.esp32_flash_tab import ESP32FlashTab
 
 
 # 配置文件路径：开发环境用源码目录，打包后用可执行文件所在目录
@@ -68,13 +69,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs = QtWidgets.QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        # 标签页：TCP / UDP / 串口 / RS485 / CRC / ESP32 Log
+        # 标签页：TCP / UDP / 串口 / RS485 / CRC / ESP32 Log / ESP32烧录
         self.tcp_tab = TCPClientTabQt(self.get_global_format)
         self.udp_tab = UDPCommTabQt(self.get_global_format)
         self.serial_tab = SerialDebugTabQt(self.get_global_format, self.get_serial_blacklist)
         self.rs485_tab = RS485TestTabQt(self.get_global_format, self.get_serial_blacklist)
         self.crc_tab = CRCTab(self.get_global_format)
         self.esp32_log_tab = ESP32LogTab(self.get_global_format, self.get_serial_blacklist)
+        self.esp32_flash_tab = ESP32FlashTab(self.get_global_format, self.get_serial_blacklist)
 
         # 加载配置与应用字体
         self.tcp_tab.load_config(self.config.get('tcp', {}))
@@ -83,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rs485_tab.load_config(self.config.get('rs485', {}))
         self.crc_tab.load_config(self.config.get('crc', {}))
         self.esp32_log_tab.load_config(self.config.get('esp32_log', {}))
+        self.esp32_flash_tab.load_config(self.config.get('esp32_flash', {}))
 
         self.tcp_tab.apply_fonts(self.send_font, self.recv_font)
         self.udp_tab.apply_fonts(self.send_font, self.recv_font)
@@ -90,6 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rs485_tab.apply_fonts(self.send_font, self.recv_font)
         self.crc_tab.apply_fonts(self.send_font, self.recv_font)
         self.esp32_log_tab.apply_fonts(self.send_font, self.recv_font)
+        self.esp32_flash_tab.apply_fonts(self.send_font, self.recv_font)
 
         self.tabs.addTab(self.tcp_tab, 'TCP客户端')
         self.tabs.addTab(self.udp_tab, 'UDP通信')
@@ -97,6 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.addTab(self.rs485_tab, 'RS485测试')
         self.tabs.addTab(self.crc_tab, 'CRC计算')
         self.tabs.addTab(self.esp32_log_tab, 'ESP32 Log')
+        self.tabs.addTab(self.esp32_flash_tab, 'ESP32烧录')
 
         # 恢复上次打开的tab页面
         last_tab = self.config.get('last_active_tab', 0)
@@ -132,7 +137,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 页面变更信号接入自动保存
         try:
-            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.esp32_log_tab]:
+            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.esp32_log_tab, self.esp32_flash_tab]:
                 tab.changed.connect(lambda: self._schedule_save())
                 tab._install_autosave_hooks()
             self.crc_tab.changed.connect(lambda: self._schedule_save())
@@ -280,6 +285,7 @@ QStatusBar { background: #1e1e1e; }
         cfg['rs485'] = self.rs485_tab.get_config()
         cfg['crc'] = self.crc_tab.get_config()
         cfg['esp32_log'] = self.esp32_log_tab.get_config()
+        cfg['esp32_flash'] = self.esp32_flash_tab.get_config()
         try:
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(cfg, f, ensure_ascii=False, indent=2)
@@ -297,7 +303,7 @@ QStatusBar { background: #1e1e1e; }
         self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=12)
         self.recv_font = self._get_ui_font('recv_font', default_family='Consolas', default_size=12)
         # 应用到所有标签页
-        for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.crc_tab, self.esp32_log_tab]:
+        for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.crc_tab, self.esp32_log_tab, self.esp32_flash_tab]:
             tab.apply_fonts(self.send_font, self.recv_font)
         # 加载各自配置
         self.tcp_tab.load_config(self.config.get('tcp', {}))
@@ -306,6 +312,7 @@ QStatusBar { background: #1e1e1e; }
         self.rs485_tab.load_config(self.config.get('rs485', {}))
         self.crc_tab.load_config(self.config.get('crc', {}))
         self.esp32_log_tab.load_config(self.config.get('esp32_log', {}))
+        self.esp32_flash_tab.load_config(self.config.get('esp32_flash', {}))
         self._apply_theme(self.ui_theme)
         self.statusBar().showMessage('配置已加载', 3000)
 
@@ -355,6 +362,10 @@ QStatusBar { background: #1e1e1e; }
                 pass
             try:
                 self.esp32_log_tab._refresh_ports()
+            except Exception:
+                pass
+            try:
+                self.esp32_flash_tab._refresh_ports()
             except Exception:
                 pass
             dlg.accept()
@@ -440,7 +451,7 @@ QStatusBar { background: #1e1e1e; }
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         try:
             # 关闭各标签页连接/线程
-            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab]:
+            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.esp32_flash_tab]:
                 try:
                     tab.shutdown()
                 except Exception:
