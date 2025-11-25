@@ -2,6 +2,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 import socket
 import threading
 import traceback
+import queue
 
 from app.base_comm import BaseCommTab
 
@@ -158,12 +159,18 @@ class TCPClientTabQt(BaseCommTab):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(5.0)
                 s.connect((host, port))
+                s.settimeout(None)
 
                 # 连接成功
                 self.sock = s
                 self.connected = True
                 self._log('已连接到服务器', 'blue')
                 self._start_recv_thread()
+                try:
+                    self._send_queue = queue.Queue(maxsize=1000)
+                except Exception:
+                    self._send_queue = None
+                self._start_send_thread()
                 self.connect_btn.setText('断开')
                 self.host_combo.setEnabled(False)
                 self.port_combo.setEnabled(False)
@@ -177,8 +184,12 @@ class TCPClientTabQt(BaseCommTab):
                 self.changed.emit()
 
             except Exception as e:
-                self._log(f'连接失败: {e}', 'red')
-                self._log(traceback.format_exc(), 'red')  # 记录详细异常
+                msg = str(e)
+                is_timeout = isinstance(e, TimeoutError) or ('timed out' in msg.lower())
+                if is_timeout:
+                    self._log(f'连接超时：请检查网络并确认 {host}:{port} ', 'orange')
+                else:
+                    self._log(f'连接失败: {msg}', 'red')
                 self.status_label.setText('未连接')
                 self.status_label.setStyleSheet('color: red;')
                 if 's' in locals() and s:
@@ -268,6 +279,10 @@ class TCPClientTabQt(BaseCommTab):
         except Exception:
             pass
         self.sock = None
+        try:
+            self._send_queue = None
+        except Exception:
+            pass
         self._log('连接已断开/服务已停止', 'blue')
         self.connect_btn.setText('连接')
         self.host_combo.setEnabled(True)
@@ -343,15 +358,8 @@ class TCPClientTabQt(BaseCommTab):
                     data = self.sock.recv(4096)
                     if not data:
                         break
-                    self._update_recv_stats(len(data))
-                    if self._display_limit_enabled:
-                        remain = self._display_limit_max - self._displayed_bytes
-                        if remain > 0:
-                            part = data[:max(0, remain)]
-                            if part:
-                                self._log(self._format_recv(part), 'green')
-                                self._displayed_bytes += len(part)
-                    else:
+                    if not self._display_limit_enabled:
+                        self._update_recv_stats(len(data))
                         self._log(self._format_recv(data), 'green')
                 except Exception as e:
                     if self.connected:
@@ -377,15 +385,8 @@ class TCPClientTabQt(BaseCommTab):
                 data = client.recv(4096)
                 if not data:
                     break
-                self._update_recv_stats(len(data))
-                if self._display_limit_enabled:
-                    remain = self._display_limit_max - self._displayed_bytes
-                    if remain > 0:
-                        part = data[:max(0, remain)]
-                        if part:
-                            self._log(f'来自 {addr[0]}:{addr[1]}: ' + self._format_recv(part), 'green')
-                            self._displayed_bytes += len(part)
-                else:
+                if not self._display_limit_enabled:
+                    self._update_recv_stats(len(data))
                     self._log(f'来自 {addr[0]}:{addr[1]}: ' + self._format_recv(data), 'green')
         except Exception as e:
             self._log(f'客户端错误: {e}', 'red')
@@ -405,25 +406,63 @@ class TCPClientTabQt(BaseCommTab):
 
     def _on_send_clicked(self, idx: int):
         row = self.send_rows[idx]
-        data = self._parse_send_data(row['data_edit'].text())
+        fmt = row['fmt_combo'].currentText()
+        data = self._parse_send_data(row['data_edit'].text(), fmt)
         try:
             if not self.sock:
                 self._log('未连接', 'red')
                 return
             # 客户端或服务端：都向当前 socket 发送（服务端为广播可后续扩展）
             if self._current_mode() == '客户端':
-                self.sock.sendall(data)
+                q = getattr(self, '_send_queue', None)
+                if q:
+                    try:
+                        q.put_nowait((fmt, data))
+                    except Exception:
+                        pass
+                else:
+                    # 兜底：无队列时直接发送
+                    self.sock.sendall(data)
+                    if not self._display_limit_enabled:
+                        self._log(self._format_by(data, fmt), 'blue')
             else:
                 # 简化：服务端下不直接发送，提示留作扩展
                 self._log('服务端发送未实现（待扩展）', 'red')
                 return
-            self._log(((self._format_recv(data) if self.get_global_format() != 'HEX' else ' '.join(f'{b:02X}' for b in data))), 'blue')
         except Exception as e:
             self._log(f'发送失败: {e}', 'red')
 
     def shutdown(self):
         super().shutdown()
         self._disconnect()
+
+    def _start_send_thread(self):
+        def loop():
+            q = getattr(self, '_send_queue', None)
+            while self.connected and self.sock:
+                try:
+                    item = q.get(timeout=0.2) if q else None
+                except Exception:
+                    item = None
+                if not item:
+                    continue
+                fmt, data = item
+                try:
+                    self.sock.sendall(data)
+                    if not self._display_limit_enabled:
+                        def log_sent():
+                            self._log(self._format_by(data, fmt), 'blue')
+                        QtCore.QTimer.singleShot(0, log_sent)
+                except Exception as e:
+                    def on_err():
+                        self._log(f'发送失败: {e}', 'red')
+                    QtCore.QTimer.singleShot(0, on_err)
+                    break
+        try:
+            self.send_thread = threading.Thread(target=loop, daemon=True)
+            self.send_thread.start()
+        except Exception:
+            pass
 
     def _update_mode_ui(self):
         # 根据模式更新标签与控件可见性

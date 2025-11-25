@@ -56,6 +56,10 @@ class BaseCommTab(QtWidgets.QWidget):
             interval_edit = QtWidgets.QLineEdit()
             interval_edit.setFixedWidth(70)
             ms_label = QtWidgets.QLabel('ms')
+            fmt_label = QtWidgets.QLabel('格式')
+            fmt_combo = QtWidgets.QComboBox()
+            fmt_combo.addItems(['ASCII', 'HEX'])
+            fmt_combo.setFixedWidth(80)
             auto_cb = QtWidgets.QCheckBox('自动发送')
             send_btn = QtWidgets.QPushButton('发送')
             auto_cb.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
@@ -64,6 +68,8 @@ class BaseCommTab(QtWidgets.QWidget):
             row2_layout.addWidget(interval_label)
             row2_layout.addWidget(interval_edit)
             row2_layout.addWidget(ms_label)
+            row2_layout.addWidget(fmt_label)
+            row2_layout.addWidget(fmt_combo)
             row2_layout.addWidget(auto_cb)
             row2_layout.addWidget(send_btn)
             row2_layout.addStretch(1)
@@ -73,12 +79,13 @@ class BaseCommTab(QtWidgets.QWidget):
 
             timer = QtCore.QTimer(self)
             timer.setSingleShot(False)
-            timer.timeout.connect(lambda checked=False, idx=i: self._on_send_clicked(idx))
+            timer.timeout.connect(lambda checked=False, idx=i: self._on_auto_tick(idx))
             auto_cb.toggled.connect(lambda checked, idx=i, t=timer, e=interval_edit: self._toggle_auto(idx, t, e, checked))
             send_btn.clicked.connect(lambda checked=False, idx=i: self._on_send_clicked(idx))
             self.send_rows.append({
                 'data_edit': data_edit,
                 'interval_edit': interval_edit,
+                'fmt_combo': fmt_combo,
                 'auto_cb': auto_cb,
                 'send_btn': send_btn,
                 'timer': timer
@@ -151,6 +158,7 @@ class BaseCommTab(QtWidgets.QWidget):
             for row in self.send_rows:
                 row['data_edit'].textChanged.connect(lambda _t=None: self.changed.emit())
                 row['interval_edit'].textChanged.connect(lambda _t=None: self.changed.emit())
+                row['fmt_combo'].currentTextChanged.connect(lambda _t=None: self.changed.emit())
                 row['auto_cb'].toggled.connect(lambda _checked: self.changed.emit())
             self.auto_scroll_cb.toggled.connect(lambda _c: self.changed.emit())
             self.timestamp_cb.toggled.connect(lambda _c: self.changed.emit())
@@ -188,12 +196,20 @@ class BaseCommTab(QtWidgets.QWidget):
         except Exception:
             pass
 
-    def _parse_send_data(self, s: str) -> bytes:
-        fmt = self.get_global_format()
+    def _parse_send_data(self, s: str, fmt: str = None) -> bytes:
+        fmt = fmt or self.get_global_format()
         if fmt == 'HEX':
             hexstr = (s or '').replace(' ', '').replace('\n', '').replace('\r', '')
             return bytes.fromhex(hexstr) if hexstr else b''
         return (s or '').encode('utf-8')
+
+    def _format_by(self, data: bytes, fmt: str) -> str:
+        if fmt == 'HEX':
+            return ' '.join(f'{b:02X}' for b in data)
+        try:
+            return data.decode('utf-8', errors='replace')
+        except Exception:
+            return repr(data)
 
     def _toggle_auto(self, idx: int, timer: QtCore.QTimer, interval_edit: QtWidgets.QLineEdit, checked: bool):
         if checked:
@@ -204,6 +220,27 @@ class BaseCommTab(QtWidgets.QWidget):
             timer.start(ms)
         else:
             timer.stop()
+
+    def _on_auto_tick(self, idx: int):
+        try:
+            if self._can_send():
+                self._on_send_clicked(idx)
+        except Exception:
+            pass
+
+    def _can_send(self) -> bool:
+        try:
+            if hasattr(self, 'ser'):
+                return bool(getattr(self, 'ser', None))
+            if hasattr(self, 'sock'):
+                # TCP/UDP: TCP 有 connected，UDP 无
+                s = getattr(self, 'sock', None)
+                if getattr(self, 'connected', None) is not None:
+                    return bool(s) and bool(getattr(self, 'connected', False))
+                return bool(s)
+        except Exception:
+            pass
+        return True
 
     def _update_recv_stats(self, byte_count: int):
         try:
@@ -288,8 +325,7 @@ class BaseCommTab(QtWidgets.QWidget):
             send_data.append({
                 'data': row['data_edit'].text(),
                 'interval': row['interval_edit'].text(),
-                'auto_send': row['auto_cb'].isChecked(),
-                'format': self.get_global_format()
+                'format': row['fmt_combo'].currentText()
             })
         return {
             'send_data': send_data,
@@ -312,7 +348,11 @@ class BaseCommTab(QtWidgets.QWidget):
                 if i < len(self.send_rows):
                     self.send_rows[i]['data_edit'].setText(data.get('data', ''))
                     self.send_rows[i]['interval_edit'].setText(str(data.get('interval', '')))
-                    self.send_rows[i]['auto_cb'].setChecked(bool(data.get('auto_send', False)))
+                    try:
+                        self.send_rows[i]['fmt_combo'].setCurrentText(str(data.get('format', self.get_global_format())))
+                    except Exception:
+                        pass
+                    self.send_rows[i]['auto_cb'].setChecked(False)
             try:
                 self.timestamp_cb.setChecked(bool(cfg.get('show_timestamp', False)))
             except Exception:

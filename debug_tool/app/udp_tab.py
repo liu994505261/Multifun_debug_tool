@@ -184,14 +184,15 @@ class UDPCommTabQt(BaseCommTab):
 
     def _on_send_clicked(self, idx: int):
         row = self.send_rows[idx]
-        data = self._parse_send_data(row['data_edit'].text())
+        fmt = row['fmt_combo'].currentText()
+        data = self._parse_send_data(row['data_edit'].text(), fmt)
         if not self.sock:
             self._log('未启动', 'red')
             return
         try:
             addr = (self.remote_host.currentText().strip(), int(self.remote_port.currentText().strip() or '0'))
             self.sock.sendto(data, addr)
-            self._log(((self._format_recv(data) if self.get_global_format() != 'HEX' else ' '.join(f'{b:02X}' for b in data))), 'blue')
+            self._log(self._format_by(data, fmt), 'blue')
             self._add_history(self.remote_host, self.remote_host.currentText())
             self._add_history(self.remote_port, self.remote_port.currentText())
         except Exception as e:

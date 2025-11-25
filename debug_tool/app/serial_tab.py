@@ -165,13 +165,14 @@ class SerialDebugTabQt(BaseCommTab):
 
     def _on_send_clicked(self, idx: int):
         row = self.send_rows[idx]
-        data = self._parse_send_data(row['data_edit'].text())
+        fmt = row['fmt_combo'].currentText()
+        data = self._parse_send_data(row['data_edit'].text(), fmt)
         if not self.ser:
             self._log('未打开串口', 'red')
             return
         try:
             self.ser.write(data)
-            self._log(((self._format_recv(data) if self.get_global_format() != 'HEX' else ' '.join(f'{b:02X}' for b in data))), 'blue')
+            self._log(self._format_by(data, fmt), 'blue')
         except Exception as e:
             self._log(f'发送失败: {e}', 'red')
 
