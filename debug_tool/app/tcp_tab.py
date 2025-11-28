@@ -8,18 +8,35 @@ from app.base_comm import BaseCommTab
 
 
 class TCPClientTabQt(BaseCommTab):
+    server_started = QtCore.Signal()
+    server_error = QtCore.Signal(str)
+    client_connected = QtCore.Signal()
+    client_connect_error = QtCore.Signal(str)
+    connection_lost = QtCore.Signal()
+
     def __init__(self, get_global_format, parent=None):
         super().__init__(get_global_format, parent)
         self.sock = None
         self.connected = False
         self.recv_thread = None
+        self.clients = []  # List to track connected clients
+        self.clients_lock = threading.Lock() # Thread safety for clients list
+
         # 连接过程状态
         self._connecting = False
         self._connect_thread = None
         self._connecting_socket = None
         self._cancel_connect_flag = False
         # 连接超时管理（毫秒）
-        self._connect_timeout_ms = 5000
+        self._connect_timeout_ms = 2000
+
+        # Connect signals
+        self.server_started.connect(self._on_server_started)
+        self.server_error.connect(self._on_server_error)
+        self.client_connected.connect(self._on_client_connected)
+        self.client_connect_error.connect(self._on_client_connect_error)
+        self.connection_lost.connect(self._on_connection_lost)
+
         # 顶部分组标题
         self.top_group.setTitle('TCP配置')
 
@@ -37,10 +54,18 @@ class TCPClientTabQt(BaseCommTab):
         self.connect_btn = QtWidgets.QPushButton('连接')
         row1_layout.addWidget(self.connect_btn)
         self.status_label = QtWidgets.QLabel('未连接')
-        self.status_label.setStyleSheet('color: red;')
+        self._set_label_status(self.status_label, 'error')
         row1_layout.addWidget(self.status_label)
         self.limit_display_cb = QtWidgets.QCheckBox('不显示接收')
         row1_layout.addWidget(self.limit_display_cb)
+
+        # 醒目匹配
+        row1_layout.addWidget(QtWidgets.QLabel('醒目:'))
+        self.highlight_edit = QtWidgets.QLineEdit()
+        self.highlight_edit.setPlaceholderText('匹配内容')
+        self.highlight_edit.setMaximumWidth(100)
+        row1_layout.addWidget(self.highlight_edit)
+        
         row1_layout.addStretch(1)
         self.top_vbox.addWidget(row1)
 
@@ -89,6 +114,8 @@ class TCPClientTabQt(BaseCommTab):
             self.max_clients_edit.textChanged.connect(lambda _t: self.changed.emit())
             self.limit_display_cb.toggled.connect(lambda _c: self._on_limit_toggled(_c))
             self.limit_display_cb.toggled.connect(lambda _c: self.changed.emit())
+            self.highlight_edit.textChanged.connect(self._on_highlight_pattern_changed)
+            self.highlight_edit.textChanged.connect(lambda _t: self.changed.emit())
         except Exception:
             pass
 
@@ -115,7 +142,7 @@ class TCPClientTabQt(BaseCommTab):
             self._log('正在取消连接...', 'orange')
             self.connect_btn.setText('连接')
             self.status_label.setText('未连接')
-            self.status_label.setStyleSheet('color: red;')
+            self._set_label_status(self.status_label, 'error')
         finally:
             self._connecting = False
             self._connecting_socket = None
@@ -143,63 +170,53 @@ class TCPClientTabQt(BaseCommTab):
             self.connected = False
             self._connecting = False
 
-            # 开始同步连接
-            try:
-                if not host or port <= 0:
-                    self._log('请输入有效的服务器地址与端口', 'red')
-                    return
+            # 异步连接
+            if not host or port <= 0:
+                self._log('请输入有效的服务器地址与端口', 'red')
+                return
 
-                self.status_label.setText('连接中...')
-                self.status_label.setStyleSheet('color: orange;')
-                self.connect_btn.setText('连接中...')
-                self.connect_btn.setEnabled(False)
-                QtWidgets.QApplication.processEvents()  # 强制刷新UI
+            self.status_label.setText('连接中...')
+            self._set_label_status(self.status_label, 'warning')
+            self.connect_btn.setText('取消') # 连接中允许取消
+            self.connect_btn.setEnabled(True)
+            self._connecting = True
+            self._cancel_connect_flag = False
 
-                self._log(f'正在连接到 {host}:{port} ...', 'blue')
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(5.0)
-                s.connect((host, port))
-                s.settimeout(None)
+            self._log(f'正在连接到 {host}:{port} ...', 'blue')
 
-                # 连接成功
-                self.sock = s
-                self.connected = True
-                self._log('已连接到服务器', 'blue')
-                self._start_recv_thread()
+            def do_connect():
+                s = None
                 try:
-                    self._send_queue = queue.Queue(maxsize=1000)
-                except Exception:
-                    self._send_queue = None
-                self._start_send_thread()
-                self.connect_btn.setText('断开')
-                self.host_combo.setEnabled(False)
-                self.port_combo.setEnabled(False)
-                self.mode_client_rb.setEnabled(False)
-                self.mode_server_rb.setEnabled(False)
-                self.status_label.setText('已连接')
-                self.status_label.setStyleSheet('color: green;')
-                self._displayed_bytes = 0
-                self._add_history(self.host_combo, host)
-                self._add_history(self.port_combo, str(port))
-                self.changed.emit()
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self._connecting_socket = s
+                    s.settimeout(2.0) # 使用2秒超时
+                    s.connect((host, port))
+                    s.settimeout(None)
+                    
+                    if self._cancel_connect_flag:
+                        try: s.close() 
+                        except: pass
+                        return
 
-            except Exception as e:
-                msg = str(e)
-                is_timeout = isinstance(e, TimeoutError) or ('timed out' in msg.lower())
-                if is_timeout:
-                    self._log(f'连接超时：请检查网络并确认 {host}:{port} ', 'orange')
-                else:
-                    self._log(f'连接失败: {msg}', 'red')
-                self.status_label.setText('未连接')
-                self.status_label.setStyleSheet('color: red;')
-                if 's' in locals() and s:
-                    try:
-                        s.close()
-                    except:
-                        pass
-            finally:
-                self.connect_btn.setText('连接' if not self.connected else '断开')
-                self.connect_btn.setEnabled(True)
+                    self.sock = s
+                    self.connected = True
+                    self.client_connected.emit()
+
+                except Exception as e:
+                    if self._cancel_connect_flag:
+                        return
+                    msg = str(e)
+                    is_timeout = isinstance(e, TimeoutError) or ('timed out' in msg.lower())
+                    if is_timeout:
+                        self.client_connect_error.emit(f'连接超时：请检查网络并确认 {host}:{port} ')
+                    else:
+                        self.client_connect_error.emit(f'连接失败: {msg}')
+                    if s:
+                        try: s.close()
+                        except: pass
+            
+            self._connect_thread = threading.Thread(target=do_connect, daemon=True)
+            self._connect_thread.start()
 
         elif mode == '服务端':
             self._log('服务端模式启动中...', 'blue')
@@ -210,66 +227,134 @@ class TCPClientTabQt(BaseCommTab):
             self.status_label.setText('启动中...')
             self.status_label.setStyleSheet('color: orange;')
 
+            # 获取最大连接数 (主线程操作)
+            try:
+                max_clients_val = int(self.max_clients_edit.text().strip() or '5')
+            except Exception:
+                max_clients_val = 5
+
             def do_server_listen():
                 try:
                     if port <= 0:
                         raise Exception('请输入有效的监听端口')
-                    self._log(f'服务端正在启动，监听 0.0.0.0:{port}', 'blue')
+                    self._log(f'服务端正在启动，监听 {host}:{port}', 'blue')
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    s.bind(('0.0.0.0', port))
-                    # 修正：使用最大连接编辑框的数值
-                    s.listen(int(self.max_clients_edit.text()))
+                    s.bind((host, port))
+                    # 修正：使用预获取的数值，避免在线程中访问 UI
+                    s.listen(max_clients_val)
                     self.sock = s
                     self.connected = True
-
-                    def on_ok():
-                        if self._cancel_connect_flag:
-                            self._disconnect()
-                            return
-                        self._log(f'服务端启动成功，正在监听 0.0.0.0:{port}', 'green')
-                        # 修正：启动 accept 线程
-                        threading.Thread(target=self._accept_loop, daemon=True).start()
-                        self.connect_btn.setText('停止')
-                        self.connect_btn.setEnabled(True)
-                        self.host_combo.setEnabled(False)
-                        self.port_combo.setEnabled(False)
-                        self.mode_client_rb.setEnabled(False)
-                        self.mode_server_rb.setEnabled(False)
-                        self.status_label.setText('运行中')
-                        self.status_label.setStyleSheet('color: green;')
-                        self._add_history(self.port_combo, str(port))
-                        self.changed.emit()
-                        self._connecting = False
-                        self._connect_thread = None
-                    QtCore.QTimer.singleShot(0, on_ok)
+                    
+                    # Emit signal to update UI in main thread
+                    self.server_started.emit()
 
                 except Exception as e:
-                    def on_fail():
-                        if self._cancel_connect_flag:
-                            self._log('已取消启动', 'orange')
-                        elif 'Address already in use' in str(e):
-                            self._log(f'启动失败: 端口 {port} 已被占用', 'red')
-                        else:
-                            self._log(f'启动失败: {e}', 'red')
-                        self.connect_btn.setText('启动')
-                        self.connect_btn.setEnabled(True)
-                        self.status_label.setText('未启动')
-                        self.status_label.setStyleSheet('color: red;')
-                        self._connecting = False
-                        self._connect_thread = None
-                        if self.sock:
-                            try: self.sock.close()
-                            except: pass
-                        self.sock = None
-                        self.connected = False
-                    QtCore.QTimer.singleShot(0, on_fail)
+                    msg = str(e)
+                    if 'Address already in use' in msg:
+                         msg = f'端口 {port} 已被占用'
+                    self.server_error.emit(msg)
 
             self._connect_thread = threading.Thread(target=do_server_listen)
             self._connect_thread.daemon = True
             self._connect_thread.start()
 
+    def _on_client_connected(self):
+        if self._cancel_connect_flag:
+            self._disconnect()
+            return
+            
+        host = self.host_combo.currentText().strip()
+        port = self.port_combo.currentText().strip()
 
+        self._log('已连接到服务器', 'blue')
+        self._start_recv_thread()
+        try:
+            self._send_queue = queue.Queue(maxsize=1000)
+        except Exception:
+            self._send_queue = None
+        self._start_send_thread()
+        self.connect_btn.setText('断开')
+        self.host_combo.setEnabled(False)
+        self.port_combo.setEnabled(False)
+        self.mode_client_rb.setEnabled(False)
+        self.mode_server_rb.setEnabled(False)
+        self.status_label.setText('已连接')
+        self._set_label_status(self.status_label, 'success')
+        self._displayed_bytes = 0
+        self._add_history(self.host_combo, host)
+        self._add_history(self.port_combo, str(port))
+        self.changed.emit()
+        self._connecting = False
+        self._connect_thread = None
+
+    def _on_client_connect_error(self, error_msg):
+        if self._cancel_connect_flag:
+            self._log('正在取消连接...', 'orange')
+        else:
+            self._log(error_msg, 'red')
+        
+        self.status_label.setText('未连接')
+        self._set_label_status(self.status_label, 'error')
+        self.connect_btn.setText('连接')
+        self.connect_btn.setEnabled(True)
+        if self.sock:
+            try: self.sock.close()
+            except: pass
+        self.sock = None
+        self.connected = False
+        self._connecting = False
+        self._connect_thread = None
+
+    def _on_connection_lost(self):
+        self._log('连接异常断开', 'red')
+        self._disconnect()
+
+    def _on_server_started(self):
+        if self._cancel_connect_flag:
+            self._disconnect()
+            return
+        
+        # Need to retrieve host/port for logging/display. 
+        # Since they are UI elements, we can access them here safely (main thread).
+        host = self.host_combo.currentText().strip()
+        port = self.port_combo.currentText().strip()
+        
+        self._log(f'服务端启动成功，正在监听 {host}:{port}', 'green')
+        
+        # Start accept thread
+        threading.Thread(target=self._accept_loop, daemon=True).start()
+        
+        self.connect_btn.setText('停止')
+        self.connect_btn.setEnabled(True)
+        self.host_combo.setEnabled(False)
+        self.port_combo.setEnabled(False)
+        self.mode_client_rb.setEnabled(False)
+        self.mode_server_rb.setEnabled(False)
+        self.status_label.setText('运行中')
+        self.status_label.setStyleSheet('color: green;')
+        self._add_history(self.port_combo, str(port))
+        self.changed.emit()
+        self._connecting = False
+        self._connect_thread = None
+
+    def _on_server_error(self, error_msg):
+        if self._cancel_connect_flag:
+            self._log('已取消启动', 'orange')
+        else:
+            self._log(f'启动失败: {error_msg}', 'red')
+        
+        self.connect_btn.setText('启动')
+        self.connect_btn.setEnabled(True)
+        self.status_label.setText('未启动')
+        self.status_label.setStyleSheet('color: red;')
+        self._connecting = False
+        self._connect_thread = None
+        if self.sock:
+            try: self.sock.close()
+            except: pass
+        self.sock = None
+        self.connected = False
 
     def _disconnect(self):
         self.connected = False
@@ -279,6 +364,16 @@ class TCPClientTabQt(BaseCommTab):
         except Exception:
             pass
         self.sock = None
+        
+        # Close all connected clients
+        with self.clients_lock:
+            for client in self.clients:
+                try:
+                    client.close()
+                except:
+                    pass
+            self.clients.clear()
+
         try:
             self._send_queue = None
         except Exception:
@@ -361,9 +456,11 @@ class TCPClientTabQt(BaseCommTab):
                     if not self._display_limit_enabled:
                         self._update_recv_stats(len(data))
                         self._log(self._format_recv(data), 'green')
+                    self.data_received.emit(data)
                 except Exception as e:
                     if self.connected:
                         self._log(f'接收错误: {e}', 'red')
+                        self.connection_lost.emit()
                     break
             self.connected = False
         self.recv_thread = threading.Thread(target=loop, daemon=True)
@@ -372,25 +469,43 @@ class TCPClientTabQt(BaseCommTab):
     def _accept_loop(self):
         try:
             while self.connected and self.sock:
-                client, addr = self.sock.accept()
-                self._log(f'客户端连接: {addr[0]}:{addr[1]}', 'blue')
-                threading.Thread(target=self._client_loop, args=(client, addr), daemon=True).start()
+                try:
+                    client, addr = self.sock.accept()
+                    self._log(f'客户端连接: {addr[0]}:{addr[1]}', 'blue')
+                    with self.clients_lock:
+                        self.clients.append(client)
+                    threading.Thread(target=self._handle_client, args=(client, addr), daemon=True).start()
+                except OSError:
+                    # Socket closed
+                    break
+                except Exception as e:
+                    if self.connected:
+                        self._log(f'服务端Accept错误: {e}', 'red')
         except Exception as e:
             if self.connected:
                 self._log(f'服务端错误: {e}', 'red')
 
-    def _client_loop(self, client: socket.socket, addr):
+    def _handle_client(self, client: socket.socket, addr):
         try:
             while self.connected:
-                data = client.recv(4096)
+                try:
+                    data = client.recv(4096)
+                except OSError:
+                    break
+                
                 if not data:
                     break
                 if not self._display_limit_enabled:
                     self._update_recv_stats(len(data))
                     self._log(f'来自 {addr[0]}:{addr[1]}: ' + self._format_recv(data), 'green')
+                self.data_received.emit(data)
         except Exception as e:
-            self._log(f'客户端错误: {e}', 'red')
+            self._log(f'客户端 {addr[0]}:{addr[1]} 错误: {e}', 'red')
         finally:
+            self._log(f'客户端断开: {addr[0]}:{addr[1]}', 'orange')
+            with self.clients_lock:
+                if client in self.clients:
+                    self.clients.remove(client)
             try:
                 client.close()
             except Exception:
@@ -426,9 +541,28 @@ class TCPClientTabQt(BaseCommTab):
                     if not self._display_limit_enabled:
                         self._log(self._format_by(data, fmt), 'blue')
             else:
-                # 简化：服务端下不直接发送，提示留作扩展
-                self._log('服务端发送未实现（待扩展）', 'red')
-                return
+                # 服务端广播发送
+                if not self.clients:
+                    self._log('无客户端连接，无法发送', 'orange')
+                    return
+                
+                success_count = 0
+                with self.clients_lock:
+                    # Copy list to avoid issues if modifications happen during iteration (though lock prevents it)
+                    current_clients = list(self.clients)
+                
+                for client in current_clients:
+                    try:
+                        client.sendall(data)
+                        success_count += 1
+                    except Exception as e:
+                        # Wait for _handle_client to remove it, or we could remove it here?
+                        # Better let the receive loop handle disconnection to avoid race conditions
+                        pass
+                
+                if not self._display_limit_enabled:
+                    self._log(f'广播发送给 {success_count} 个客户端: ' + self._format_by(data, fmt), 'blue')
+
         except Exception as e:
             self._log(f'发送失败: {e}', 'red')
 
@@ -482,3 +616,6 @@ class TCPClientTabQt(BaseCommTab):
                 self._displayed_bytes = 0
         except Exception:
             pass
+
+    def _on_highlight_pattern_changed(self, text):
+        self.highlight_pattern = text

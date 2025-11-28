@@ -1,14 +1,20 @@
 import time
 from PySide6 import QtWidgets, QtCore, QtGui
+from app.theme import ModernTheme
 
 
 class BaseCommTab(QtWidgets.QWidget):
     changed = QtCore.Signal()
+    data_received = QtCore.Signal(bytes)
+    sig_log_safe = QtCore.Signal(str, str)
 
     def __init__(self, get_global_format, parent=None):
         super().__init__(parent)
         self.get_global_format = get_global_format
         self.max_recv_lines = 2000
+        self.highlight_pattern = ""
+        self.highlight_color = "#ff4d4d"  # Default bright red
+        self.sig_log_safe.connect(self._log_ui)
         self._build_base_ui()
 
     def _build_base_ui(self):
@@ -171,21 +177,106 @@ class BaseCommTab(QtWidgets.QWidget):
             row['data_edit'].setFont(send_font)
         self.recv_text.setFont(recv_font)
 
-    def _log(self, text: str, color: str = 'black'):
+    def _set_label_status(self, label: QtWidgets.QLabel, status: str):
+        """
+        Update status label with theme-aware styling.
+        status: 'success', 'error', 'warning', or '' (default)
+        """
+        label.setProperty('status', status)
+        label.style().unpolish(label)
+        label.style().polish(label)
+
+    def _log(self, text: str, color: str = None):
+        # Ensure we are on the main thread
+        if QtCore.QThread.currentThread() != self.thread():
+            # Use signal to dispatch to main thread safely
+            # Convert None to empty string for signal compatibility if needed
+            self.sig_log_safe.emit(text, color or "")
+            return
+        self._log_ui(text, color)
+
+    def _log_ui(self, text: str, color: str = None):
+        # Handle signal string conversion back to None if needed
+        if color == "":
+            color = None
+
         if getattr(self, 'pause_recv', False):
             return
+        
+        # Map legacy color names to theme palette
+        theme_mode = 'dark' if self.window().property('ui_theme') == 'dark' else 'light'
+        # Attempt to detect theme from window, but might be unreliable if not attached yet.
+        # Actually, ModernTheme.get_qss() uses the requested theme.
+        # But here we are inserting text into QPlainTextEdit.
+        # We need to pick a color hex.
+        
+        # Better approach: Use the colors from ModernTheme based on the current application theme?
+        # Or just pick a safe color.
+        # Let's try to map common names to hex values from our palette.
+        # We need to know if we are in dark or light mode to pick the right palette.
+        # But checking that dynamically might be slow or complex.
+        # A simpler way: Use "Red" / "Green" that are visible on both, or
+        # Check the window property.
+        
+        palette = ModernTheme.dark_palette() # Default to dark for safety or check property
+        try:
+            # Try to get the theme from the main window
+            mw = QtWidgets.QApplication.activeWindow()
+            if mw and hasattr(mw, 'ui_theme') and mw.ui_theme == 'light':
+                palette = ModernTheme.light_palette()
+        except:
+            pass
+
+        col_map = {
+            'red': palette['error'],
+            'green': palette['success'],
+            'blue': palette['accent'],
+            'orange': palette['warning'],
+            'black': palette['text'], # 'black' was default, now map to text
+        }
+        
+        hex_color = col_map.get(color, palette['text'])
+        if color is None:
+            hex_color = palette['text']
+
         cursor = self.recv_text.textCursor()
-        fmt = QtGui.QTextCharFormat()
-        fmt.setForeground(QtGui.QBrush(QtGui.QColor(color)))
         cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
-        cursor.setCharFormat(fmt)
+
+        # Formats
+        base_fmt = QtGui.QTextCharFormat()
+        base_fmt.setForeground(QtGui.QBrush(QtGui.QColor(hex_color)))
+        
+        highlight_fmt = QtGui.QTextCharFormat()
+        highlight_fmt.setForeground(QtGui.QBrush(QtGui.QColor('red')))
+        highlight_fmt.setFontWeight(QtGui.QFont.Weight.Bold)
+
+        # Timestamp
         if getattr(self, 'timestamp_cb', None) and self.timestamp_cb.isChecked():
             ts = time.time()
             tm = time.localtime(ts)
             prefix = f"[{time.strftime('%H:%M:%S', tm)}.{int((ts % 1)*1000):03d}] "
-            cursor.insertText(prefix + text + '\n')
+            cursor.setCharFormat(base_fmt)
+            cursor.insertText(prefix)
+
+        # Text Content with Partial Highlighting
+        pattern = getattr(self, 'highlight_pattern', '')
+        if pattern and pattern in text:
+            parts = text.split(pattern)
+            for i, part in enumerate(parts):
+                if part:
+                    cursor.setCharFormat(base_fmt)
+                    cursor.insertText(part)
+                if i < len(parts) - 1:
+                    cursor.setCharFormat(highlight_fmt)
+                    cursor.insertText(pattern)
         else:
-            cursor.insertText(text + '\n')
+            cursor.setCharFormat(base_fmt)
+            cursor.insertText(text)
+
+        # Newline
+        cursor.setCharFormat(base_fmt)
+        cursor.insertText('\n')
+
         if self.auto_scroll_cb.isChecked():
             self.recv_text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
         if self.recv_text.document().blockCount() > self.max_recv_lines:

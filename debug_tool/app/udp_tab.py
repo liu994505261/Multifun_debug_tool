@@ -25,8 +25,16 @@ class UDPCommTabQt(BaseCommTab):
         self.toggle_btn = QtWidgets.QPushButton('启动')
         row1_layout.addWidget(self.toggle_btn)
         self.status_label = QtWidgets.QLabel('未连接')
-        self.status_label.setStyleSheet('color: red;')
+        self._set_label_status(self.status_label, 'error')
         row1_layout.addWidget(self.status_label)
+        
+        # 醒目匹配
+        row1_layout.addWidget(QtWidgets.QLabel('醒目:'))
+        self.highlight_edit = QtWidgets.QLineEdit()
+        self.highlight_edit.setPlaceholderText('匹配内容')
+        self.highlight_edit.setMaximumWidth(100)
+        row1_layout.addWidget(self.highlight_edit)
+        
         row1_layout.addStretch(1)
         self.top_vbox.addWidget(row1)
 
@@ -101,6 +109,8 @@ class UDPCommTabQt(BaseCommTab):
             self.broadcast_cb.toggled.connect(lambda _c: self.changed.emit())
             self.multicast_cb.toggled.connect(lambda _c: self.changed.emit())
             self.multicast_group.textChanged.connect(lambda _t: self.changed.emit())
+            self.highlight_edit.textChanged.connect(self._on_highlight_pattern_changed)
+            self.highlight_edit.textChanged.connect(lambda _t: self.changed.emit())
         except Exception:
             pass
 
@@ -132,7 +142,7 @@ class UDPCommTabQt(BaseCommTab):
             self.remote_host.setEnabled(False)
             self.remote_port.setEnabled(False)
             self.status_label.setText('运行中')
-            self.status_label.setStyleSheet('color: green;')
+            self._set_label_status(self.status_label, 'success')
             try:
                 self._add_history(self.local_host, self.local_host.currentText())
                 self._add_history(self.local_port, self.local_port.currentText())
@@ -161,7 +171,7 @@ class UDPCommTabQt(BaseCommTab):
         self.remote_host.setEnabled(True)
         self.remote_port.setEnabled(True)
         self.status_label.setText('未连接')
-        self.status_label.setStyleSheet('color: red;')
+        self._set_label_status(self.status_label, 'error')
 
     def _recv_loop(self):
         while self.running and self.sock:
@@ -169,6 +179,7 @@ class UDPCommTabQt(BaseCommTab):
                 data, addr = self.sock.recvfrom(4096)
                 self._update_recv_stats(len(data))
                 self._log(f'来自 {addr[0]}:{addr[1]}: ' + self._format_recv(data), 'green')
+                self.data_received.emit(data)
             except Exception as e:
                 if self.running:
                     self._log(f'接收错误: {e}', 'red')
@@ -273,3 +284,6 @@ class UDPCommTabQt(BaseCommTab):
             self._update_mode_ui()
         except Exception:
             pass
+
+    def _on_highlight_pattern_changed(self, text):
+        self.highlight_pattern = text

@@ -23,10 +23,12 @@ if _PROJECT_ROOT not in sys.path:
 from app.tcp_tab import TCPClientTabQt
 from app.udp_tab import UDPCommTabQt
 from app.serial_tab import SerialDebugTabQt
-from app.rs485_tab import RS485TestTabQt
-from app.crc_tab import CRCTab
+from app.modbus_tab import ModbusTab
+from app.plotter_tab import PlotterTab
+from app.analyzer_tab import ProtocolAnalyzerTab
 from app.esp32_log_tab import ESP32LogTab
 from app.esp32_flash_tab import ESP32FlashTab
+from app.theme import ModernTheme
 
 
 # 配置文件路径：开发环境用源码目录，打包后用可执行文件所在目录
@@ -62,8 +64,8 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
 
         # 字体（遵循原配置结构 ui.send_font / ui.recv_font）
-        self.send_font = QtGui.QFont(self._get_ui_font('send_font', default_family='Consolas', default_size=12))
-        self.recv_font = QtGui.QFont(self._get_ui_font('recv_font', default_family='Consolas', default_size=12))
+        self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=12)
+        self.recv_font = self._get_ui_font('recv_font', default_family='Consolas', default_size=12)
 
         # 中心区域：标签页
         self.tabs = QtWidgets.QTabWidget()
@@ -73,8 +75,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tcp_tab = TCPClientTabQt(self.get_global_format)
         self.udp_tab = UDPCommTabQt(self.get_global_format)
         self.serial_tab = SerialDebugTabQt(self.get_global_format, self.get_serial_blacklist)
-        self.rs485_tab = RS485TestTabQt(self.get_global_format, self.get_serial_blacklist)
-        self.crc_tab = CRCTab(self.get_global_format)
+        self.modbus_tab = ModbusTab(self.get_global_format, self.get_serial_blacklist)
+        self.plotter_tab = PlotterTab(self.get_global_format)
+        self.analyzer_tab = ProtocolAnalyzerTab(self.get_global_format)
         self.esp32_log_tab = ESP32LogTab(self.get_global_format, self.get_serial_blacklist)
         self.esp32_flash_tab = ESP32FlashTab(self.get_global_format, self.get_serial_blacklist)
 
@@ -82,26 +85,38 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tcp_tab.load_config(self.config.get('tcp', {}))
         self.udp_tab.load_config(self.config.get('udp', {}))
         self.serial_tab.load_config(self.config.get('serial', {}))
-        self.rs485_tab.load_config(self.config.get('rs485', {}))
-        self.crc_tab.load_config(self.config.get('crc', {}))
+        self.modbus_tab.load_config(self.config.get('modbus', {}))
+        self.plotter_tab.load_config(self.config.get('plotter', {}))
+        self.analyzer_tab.load_config(self.config.get('analyzer', {}))
         self.esp32_log_tab.load_config(self.config.get('esp32_log', {}))
         self.esp32_flash_tab.load_config(self.config.get('esp32_flash', {}))
 
         self.tcp_tab.apply_fonts(self.send_font, self.recv_font)
         self.udp_tab.apply_fonts(self.send_font, self.recv_font)
         self.serial_tab.apply_fonts(self.send_font, self.recv_font)
-        self.rs485_tab.apply_fonts(self.send_font, self.recv_font)
-        self.crc_tab.apply_fonts(self.send_font, self.recv_font)
+        self.modbus_tab.apply_fonts(self.send_font, self.recv_font)
+        self.plotter_tab.apply_fonts(self.send_font, self.recv_font)
+        self.analyzer_tab.apply_fonts(self.send_font, self.recv_font)
         self.esp32_log_tab.apply_fonts(self.send_font, self.recv_font)
         self.esp32_flash_tab.apply_fonts(self.send_font, self.recv_font)
 
         self.tabs.addTab(self.tcp_tab, 'TCP客户端')
         self.tabs.addTab(self.udp_tab, 'UDP通信')
         self.tabs.addTab(self.serial_tab, '串口调试')
-        self.tabs.addTab(self.rs485_tab, 'RS485测试')
-        self.tabs.addTab(self.crc_tab, 'CRC计算')
+        self.tabs.addTab(self.modbus_tab, 'Modbus')
+        self.tabs.addTab(self.plotter_tab, '数据波形')
+        self.tabs.addTab(self.analyzer_tab, '协议分析')
         self.tabs.addTab(self.esp32_log_tab, 'ESP32 Log')
         self.tabs.addTab(self.esp32_flash_tab, 'ESP32烧录')
+
+        # 录制文件句柄
+        self.record_file = None
+
+        # 数据路由
+        self.tcp_tab.data_received.connect(lambda d: self._route_data(d, 'TCP客户端'))
+        self.udp_tab.data_received.connect(lambda d: self._route_data(d, 'UDP通信'))
+        self.serial_tab.data_received.connect(lambda d: self._route_data(d, '串口调试'))
+        self.modbus_tab.data_received.connect(lambda d: self._route_data(d, 'Modbus'))
 
         # 恢复上次打开的tab页面
         last_tab = self.config.get('last_active_tab', 0)
@@ -114,6 +129,16 @@ class MainWindow(QtWidgets.QMainWindow):
         # 状态栏：格式选择 + 时间
         status = self.statusBar()
         status.showMessage('就绪')
+        # 修复背景色：让QStatusBar背景透明，继承主窗口颜色
+        status.setStyleSheet("QStatusBar { background: transparent; } QStatusBar::item { border: none; }")
+        
+        # # 录制功能
+        # self.record_btn = QtWidgets.QPushButton("开始录制")
+        # self.record_btn.setCheckable(True)
+        # self.record_btn.setStyleSheet("QPushButton:checked { background-color: #ff4d4d; color: white; border-radius: 4px; }")
+        # self.record_btn.clicked.connect(self._toggle_recording)
+        # status.addPermanentWidget(self.record_btn)
+
         fmt_label = QtWidgets.QLabel('格式:')
         self.format_combo = QtWidgets.QComboBox()
         self.format_combo.addItems(['ASCII', 'HEX'])
@@ -137,10 +162,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 页面变更信号接入自动保存
         try:
-            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.esp32_log_tab, self.esp32_flash_tab]:
+            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab]:
                 tab.changed.connect(lambda: self._schedule_save())
                 tab._install_autosave_hooks()
-            self.crc_tab.changed.connect(lambda: self._schedule_save())
         except Exception:
             pass
 
@@ -153,7 +177,7 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.addAction('退出', self.close)
 
         settings_menu = menu.addMenu('设置')
-        settings_menu.addAction('字体与大小...', self._show_font_settings)
+        # settings_menu.addAction('字体与大小...', self._show_font_settings) # 移除
         settings_menu.addAction('串口黑名单...', self._show_serial_blacklist_settings)
         self.dark_theme_action = QtGui.QAction('深色主题', self)
         self.dark_theme_action.setCheckable(True)
@@ -165,6 +189,52 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu.addAction('关于', self._show_about)
 
         self._apply_theme(self.ui_theme)
+
+    # 数据路由
+    def _route_data(self, data, source):
+        self.plotter_tab.process_incoming_data(data, source)
+        self.analyzer_tab.process_incoming_data(data, source)
+        
+        # 录制
+        if self.record_file:
+            try:
+                ts = QtCore.QDateTime.currentDateTime().toString('yyyy-MM-dd hh:mm:ss.zzz')
+                # 尝试转文本
+                content = ""
+                try:
+                    content = data.decode('utf-8', errors='replace')
+                except:
+                    content = repr(data)
+                
+                line = f"[{ts}] [{source}] {content}\n"
+                self.record_file.write(line)
+                self.record_file.flush()
+            except Exception:
+                pass
+
+    # # 录制开关
+    # def _toggle_recording(self):
+    #     if self.record_btn.isChecked():
+    #         # 开始录制
+    #         filename = f"record_{QtCore.QDateTime.currentDateTime().toString('yyyyMMdd_hhmmss')}.log"
+    #         path = os.path.join(os.getcwd(), filename)
+    #         try:
+    #             self.record_file = open(path, 'w', encoding='utf-8')
+    #             self.record_btn.setText(f"录制中: {filename}")
+    #             self.statusBar().showMessage(f"开始录制到 {path}", 3000)
+    #         except Exception as e:
+    #             self.record_btn.setChecked(False)
+    #             QtWidgets.QMessageBox.warning(self, "录制失败", f"无法创建文件: {e}")
+    #     else:
+    #         # 停止录制
+    #         if self.record_file:
+    #             try:
+    #                 self.record_file.close()
+    #             except:
+    #                 pass
+    #             self.record_file = None
+    #         self.record_btn.setText("开始录制")
+    #         self.statusBar().showMessage("录制已停止", 3000)
 
     # 全局格式接口（给标签页调用）
     def get_global_format(self) -> str:
@@ -179,35 +249,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._schedule_save()
         
     def _apply_theme(self, theme: str):
-        qss_dark = """
-QWidget { background-color: #1e1e1e; color: #e0e0e0; }
-QGroupBox { border: 1px solid #3a3a3a; border-radius: 6px; margin-top: 6px; }
-QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; color: #c8c8c8; }
-QTabWidget::pane { border: 1px solid #3a3a3a; }
-QTabBar::tab { background: #2b2b2b; border: 1px solid #3a3a3a; border-bottom-color: #2b2b2b; padding: 6px 12px; margin-right: 2px; }
-QTabBar::tab:selected { background: #3b3b3b; color: #ffffff; }
-QTabBar::tab:hover { background: #343434; }
-QPushButton { background-color: #2d2d30; border: 1px solid #3a3a3a; border-radius: 4px; padding: 6px 12px; }
-QPushButton:hover { background-color: #3a3a3d; }
-QPushButton:pressed { background-color: #46464a; }
-QComboBox { background-color: #2d2d30; border: 1px solid #3a3a3a; border-radius: 4px; padding: 4px; }
-QComboBox QAbstractItemView { background-color: #2d2d30; selection-background-color: #3b3b3b; color: #e0e0e0; }
-QLineEdit, QPlainTextEdit, QTextEdit { background-color: #262626; border: 1px solid #3a3a3a; border-radius: 4px; color: #e6e6e6; }
-QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus { border: 1px solid #5a9bd5; }
-QCheckBox { spacing: 6px; }
-QCheckBox::indicator { width: 16px; height: 16px; }
-QSplitter::handle { background-color: #2b2b2b; }
-QMenuBar { background-color: #1e1e1e; }
-QMenuBar::item { background: transparent; padding: 6px 12px; }
-QMenuBar::item:selected { background: #343434; }
-QMenu { background-color: #2b2b2b; border: 1px solid #3a3a3a; }
-QMenu::item { padding: 6px 18px; }
-QMenu::item:selected { background-color: #3b3b3b; }
-QStatusBar { background: #1e1e1e; }
-"""
         app = QtWidgets.QApplication.instance()
         if app:
-            app.setStyleSheet(qss_dark if theme == 'dark' else '')
+            app.setStyleSheet(ModernTheme.get_qss(theme))
 
     def _on_dark_theme_toggled(self, checked: bool):
         self.ui_theme = 'dark' if checked else 'light'
@@ -237,6 +281,29 @@ QStatusBar { background: #1e1e1e; }
     def _update_clock(self):
         now = QtCore.QDateTime.currentDateTime().toString('yyyy-MM-dd hh:mm:ss')
         self.clock_label.setText(now)
+
+    # 缩放功能
+    def _zoom_in(self):
+        self._adjust_font_size(1)
+
+    def _zoom_out(self):
+        self._adjust_font_size(-1)
+
+    def _adjust_font_size(self, delta):
+        s = self.send_font.pointSize() + delta
+        if s < 6: s = 6
+        if s > 72: s = 72
+        self.send_font.setPointSize(s)
+        
+        r = self.recv_font.pointSize() + delta
+        if r < 6: r = 6
+        if r > 72: r = 72
+        self.recv_font.setPointSize(r)
+        
+        # Update tabs
+        for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab]:
+            tab.apply_fonts(self.send_font, self.recv_font)
+        self._schedule_save()
 
     # 配置读写
     def _load_config(self) -> dict:
@@ -282,8 +349,9 @@ QStatusBar { background: #1e1e1e; }
         cfg['tcp'] = self.tcp_tab.get_config()
         cfg['udp'] = self.udp_tab.get_config()
         cfg['serial'] = self.serial_tab.get_config()
-        cfg['rs485'] = self.rs485_tab.get_config()
-        cfg['crc'] = self.crc_tab.get_config()
+        cfg['modbus'] = self.modbus_tab.get_config()
+        cfg['plotter'] = self.plotter_tab.get_config()
+        cfg['analyzer'] = self.analyzer_tab.get_config()
         cfg['esp32_log'] = self.esp32_log_tab.get_config()
         cfg['esp32_flash'] = self.esp32_flash_tab.get_config()
         try:
@@ -303,14 +371,15 @@ QStatusBar { background: #1e1e1e; }
         self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=12)
         self.recv_font = self._get_ui_font('recv_font', default_family='Consolas', default_size=12)
         # 应用到所有标签页
-        for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.crc_tab, self.esp32_log_tab, self.esp32_flash_tab]:
+        for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab]:
             tab.apply_fonts(self.send_font, self.recv_font)
         # 加载各自配置
         self.tcp_tab.load_config(self.config.get('tcp', {}))
         self.udp_tab.load_config(self.config.get('udp', {}))
         self.serial_tab.load_config(self.config.get('serial', {}))
-        self.rs485_tab.load_config(self.config.get('rs485', {}))
-        self.crc_tab.load_config(self.config.get('crc', {}))
+        self.modbus_tab.load_config(self.config.get('modbus', {}))
+        self.plotter_tab.load_config(self.config.get('plotter', {}))
+        self.analyzer_tab.load_config(self.config.get('analyzer', {}))
         self.esp32_log_tab.load_config(self.config.get('esp32_log', {}))
         self.esp32_flash_tab.load_config(self.config.get('esp32_flash', {}))
         self._apply_theme(self.ui_theme)
@@ -357,7 +426,7 @@ QStatusBar { background: #1e1e1e; }
             except Exception:
                 pass
             try:
-                self.rs485_tab._refresh_ports()
+                self.modbus_tab._refresh_ports()
             except Exception:
                 pass
             try:
@@ -377,73 +446,8 @@ QStatusBar { background: #1e1e1e; }
 
     # 字体设置
     def _show_font_settings(self):
-        dlg = QtWidgets.QDialog(self)
-        dlg.setWindowTitle('字体与大小')
-        layout = QtWidgets.QVBoxLayout(dlg)
-
-        db = QtGui.QFontDatabase()
-        families = db.families()
-
-        # 发送字体
-        send_row = QtWidgets.QHBoxLayout()
-        send_row.addWidget(QtWidgets.QLabel('发送字体:'))
-        send_family = QtWidgets.QComboBox()
-        send_family.addItems(families)
-        send_family.setCurrentText(self.send_font.family())
-        send_row.addWidget(send_family)
-        send_row.addWidget(QtWidgets.QLabel('大小:'))
-        send_size = QtWidgets.QSpinBox()
-        send_size.setRange(8, 36)
-        send_size.setValue(self.send_font.pointSize())
-        send_row.addWidget(send_size)
-        layout.addLayout(send_row)
-
-        # 接收字体
-        recv_row = QtWidgets.QHBoxLayout()
-        recv_row.addWidget(QtWidgets.QLabel('接收字体:'))
-        recv_family = QtWidgets.QComboBox()
-        recv_family.addItems(families)
-        recv_family.setCurrentText(self.recv_font.family())
-        recv_row.addWidget(recv_family)
-        recv_row.addWidget(QtWidgets.QLabel('大小:'))
-        recv_size = QtWidgets.QSpinBox()
-        recv_size.setRange(8, 36)
-        recv_size.setValue(self.recv_font.pointSize())
-        recv_row.addWidget(recv_size)
-        layout.addLayout(recv_row)
-
-        preview = QtWidgets.QLabel('示例：ABC 123 中文测试')
-        layout.addWidget(preview)
-
-        def update_preview():
-            f = QtGui.QFont(send_family.currentText(), send_size.value())
-            preview.setFont(f)
-        send_family.currentTextChanged.connect(lambda _: update_preview())
-        send_size.valueChanged.connect(lambda _: update_preview())
-        update_preview()
-
-        btns = QtWidgets.QHBoxLayout()
-        ok_btn = QtWidgets.QPushButton('应用')
-        cancel_btn = QtWidgets.QPushButton('取消')
-        btns.addWidget(ok_btn)
-        btns.addWidget(cancel_btn)
-        layout.addLayout(btns)
-
-        def apply_and_close():
-            self.send_font = QtGui.QFont(send_family.currentText(), send_size.value())
-            self.recv_font = QtGui.QFont(recv_family.currentText(), recv_size.value())
-            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.crc_tab]:
-                try:
-                    tab.apply_fonts(self.send_font, self.recv_font)
-                except Exception:
-                    pass
-            # 字体更改后自动保存
-            self._schedule_save()
-            dlg.accept()
-
-        ok_btn.clicked.connect(apply_and_close)
-        cancel_btn.clicked.connect(dlg.reject)
-        dlg.exec()
+        # 移除
+        pass
 
     def _show_about(self):
         QtWidgets.QMessageBox.information(self, '关于', '通信测试上位机\nPySide6 精简版：模块化标签页与配置保存。')
@@ -451,7 +455,7 @@ QStatusBar { background: #1e1e1e; }
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         try:
             # 关闭各标签页连接/线程
-            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.rs485_tab, self.esp32_flash_tab]:
+            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_flash_tab]:
                 try:
                     tab.shutdown()
                 except Exception:
