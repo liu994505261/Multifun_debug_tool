@@ -8,10 +8,8 @@ on:
     types: [created, published]
 
 jobs:
-  build-and-release:
+  build-windows:
     runs-on: windows-latest
-    permissions:
-      contents: write
     
     steps:
     - name: Checkout code
@@ -34,16 +32,86 @@ jobs:
       run: |
         python -m PyInstaller --noconfirm TcpTool.spec
     
+    - name: Rename artifact
+      run: |
+        move debug_tool\dist\TcpTool.exe debug_tool\dist\TcpTool-Windows.exe
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-build
+        path: debug_tool/dist/TcpTool-Windows.exe
+
+  build-linux-arm:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm
+    
+    - name: Build for ARM using Docker
+      run: |
+        docker run --rm --platform linux/arm/v7 \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace/debug_tool \
+          python:3.11-slim-bullseye \
+          bash -c "
+            apt-get update && \
+            apt-get install -y binutils && \
+            python -m pip install --upgrade pip && \
+            pip install pyinstaller && \
+            pip install -r requirements.txt && \
+            python -m PyInstaller --noconfirm TcpTool.spec
+          "
+    
+    - name: Rename artifact
+      run: |
+        mv debug_tool/dist/TcpTool debug_tool/dist/TcpTool-Linux-ARM
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-arm-build
+        path: debug_tool/dist/TcpTool-Linux-ARM
+
+  release:
+    needs: [build-windows, build-linux-arm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download Windows artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-build
+        path: artifacts
+    
+    - name: Download Linux ARM artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-arm-build
+        path: artifacts
+    
     - name: Get tag name
       id: tag
       run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      shell: bash
     
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.tag.outputs.tag || github.event.release.tag_name }}
-        files: debug_tool/dist/TcpTool.exe
+        files: |
+          artifacts/TcpTool-Windows.exe
+          artifacts/TcpTool-Linux-ARM
         draft: false
         prerelease: false
         generate_release_notes: true

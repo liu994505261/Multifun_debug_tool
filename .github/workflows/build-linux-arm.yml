@@ -1,0 +1,43 @@
+name: Build Linux ARM
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm
+    
+    - name: Build for ARM using Docker
+      run: |
+        docker run --rm --platform linux/arm/v7 \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace/debug_tool \
+          python:3.11-slim-bullseye \
+          bash -c "
+            apt-get update && \
+            apt-get install -y binutils && \
+            python -m pip install --upgrade pip && \
+            pip install pyinstaller && \
+            pip install -r requirements.txt && \
+            python -m PyInstaller --noconfirm TcpTool.spec
+          "
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: TcpTool-Linux-ARM
+        path: debug_tool/dist/TcpTool
+        if-no-files-found: error
