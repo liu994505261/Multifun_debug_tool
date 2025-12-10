@@ -29,17 +29,29 @@ from app.analyzer_tab import ProtocolAnalyzerTab
 from app.esp32_log_tab import ESP32LogTab
 from app.esp32_flash_tab import ESP32FlashTab
 from app.theme import ModernTheme
+from app.version_manager import VersionManager, UpdateDialog, DownloadProgressDialog
 
 
 # 配置文件路径：开发环境用源码目录，打包后用可执行文件所在目录
 CONFIG_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
 CONFIG_FILE = os.path.join(CONFIG_DIR, 'config.json')
 
+# 应用版本
+def get_app_version():
+    """从__version__模块获取应用版本"""
+    try:
+        from app.__version__ import __version__
+        return __version__
+    except ImportError:
+        return "1.0.0"
+
+APP_VERSION = get_app_version()
+
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('通信测试上位机 (PySide6)')
+        self.setWindowTitle(f'通信测试上位机 v{APP_VERSION} (PySide6)')
         self.resize(1200, 800)
 
         # 配置与状态
@@ -186,9 +198,25 @@ class MainWindow(QtWidgets.QMainWindow):
         settings_menu.addAction(self.dark_theme_action)
 
         help_menu = menu.addMenu('帮助')
+        help_menu.addAction('检查更新', self._manual_check_update)
+        help_menu.addSeparator()
         help_menu.addAction('关于', self._show_about)
 
         self._apply_theme(self.ui_theme)
+
+        # 版本管理器
+        self.version_manager = VersionManager(APP_VERSION)
+        self.version_manager.update_available.connect(self._on_update_available)
+        self.version_manager.download_progress.connect(self._on_download_progress)
+        self.version_manager.download_finished.connect(self._on_download_finished)
+        self.version_manager.download_error.connect(self._on_download_error)
+        self.version_manager.update_finished.connect(self._on_update_finished)
+        self.version_manager.update_error.connect(self._on_update_error)
+        
+        self.download_dialog = None
+        
+        # 启动时检查更新（延迟3秒，避免影响启动速度）
+        QtCore.QTimer.singleShot(3000, self._check_for_updates)
 
     # 数据路由
     def _route_data(self, data, source):
@@ -450,7 +478,23 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
     def _show_about(self):
-        QtWidgets.QMessageBox.information(self, '关于', '通信测试上位机\nPySide6 精简版：模块化标签页与配置保存。')
+        about_text = f"""通信测试上位机
+        
+版本: {APP_VERSION}
+基于: PySide6
+功能: 模块化标签页与配置保存
+
+支持协议:
+• TCP/UDP 通信
+• 串口调试
+• Modbus 协议
+• 数据波形显示
+• 协议分析
+• ESP32 日志与烧录
+
+自动更新: 支持从 GitHub 自动检查和下载更新"""
+        
+        QtWidgets.QMessageBox.information(self, '关于', about_text)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         try:
@@ -486,6 +530,83 @@ class MainWindow(QtWidgets.QMainWindow):
             self._save_timer.start(int(delay_ms))
         except Exception:
             self._save_config()
+
+    # 版本管理相关方法
+    def _check_for_updates(self):
+        """检查更新"""
+        try:
+            self.version_manager.check_for_updates()
+        except Exception as e:
+            print(f"检查更新失败: {e}")
+
+    def _on_update_available(self, current_version: str, latest_version: str):
+        """发现新版本时的处理"""
+        dialog = UpdateDialog(current_version, latest_version, self)
+        result = dialog.exec()
+        
+        if result == QtWidgets.QDialog.DialogCode.Accepted:
+            # 用户选择立即更新
+            self._start_download()
+        elif result == 2:  # 稍后提醒
+            # 30分钟后再次检查
+            QtCore.QTimer.singleShot(30 * 60 * 1000, self._check_for_updates)
+
+    def _start_download(self):
+        """开始下载更新"""
+        self.download_dialog = DownloadProgressDialog(self)
+        self.download_dialog.show()
+        self.version_manager.download_latest_release()
+
+    def _on_download_progress(self, progress: int):
+        """下载进度更新"""
+        if self.download_dialog:
+            self.download_dialog.update_progress(progress)
+
+    def _on_download_finished(self, file_path: str):
+        """下载完成"""
+        if self.download_dialog:
+            self.download_dialog.set_status("下载完成，正在安装...")
+        
+        # 自动安装更新
+        self.version_manager.install_update(file_path)
+
+    def _on_download_error(self, error_msg: str):
+        """下载错误"""
+        if self.download_dialog:
+            self.download_dialog.close()
+            self.download_dialog = None
+        
+        QtWidgets.QMessageBox.warning(self, "下载失败", f"下载更新失败：\n{error_msg}")
+
+    def _on_update_finished(self):
+        """更新完成"""
+        if self.download_dialog:
+            self.download_dialog.close()
+            self.download_dialog = None
+        
+        reply = QtWidgets.QMessageBox.question(
+            self, "更新完成", 
+            "更新已完成！需要重启应用程序以应用更新。\n\n是否现在重启？",
+            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+        )
+        
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+            # 重启应用程序
+            QtCore.QProcess.startDetached(sys.executable, sys.argv)
+            QtWidgets.QApplication.quit()
+
+    def _on_update_error(self, error_msg: str):
+        """更新错误"""
+        if self.download_dialog:
+            self.download_dialog.close()
+            self.download_dialog = None
+        
+        QtWidgets.QMessageBox.critical(self, "更新失败", f"安装更新失败：\n{error_msg}")
+
+    def _manual_check_update(self):
+        """手动检查更新"""
+        self.statusBar().showMessage("正在检查更新...", 3000)
+        self._check_for_updates()
 
 
 def main():

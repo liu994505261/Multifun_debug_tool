@@ -3,3 +3,4 @@ build/
 dist/
 .idea/
 *.json
+debug_tool/version_manager.log
