@@ -53,6 +53,11 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle(f'通信测试上位机 v{APP_VERSION} (PySide6)')
         self.resize(1200, 800)
+        
+        # 设置窗口图标（解决任务栏图标不显示问题）
+        icon_path = os.path.join(os.path.dirname(__file__), 'icon.ico')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # 配置与状态
         self.config = self._load_config()
@@ -611,6 +616,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
+    
+    # 设置应用程序图标（确保任务栏图标显示）
+    icon_path = os.path.join(os.path.dirname(__file__), 'icon.ico')
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QtGui.QIcon(icon_path))
+    
     win = MainWindow()
     win.show()
     sys.exit(app.exec())

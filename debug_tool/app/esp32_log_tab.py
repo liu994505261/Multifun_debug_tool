@@ -2,6 +2,8 @@ import serial
 import serial.tools.list_ports
 import threading
 import time
+import os
+from datetime import datetime
 from PySide6 import QtWidgets, QtCore, QtGui
 
 from app.base_comm import BaseCommTab
@@ -83,6 +85,11 @@ class ESP32LogTab(BaseCommTab):
         self.read_thread = None
         self.running = False
         self.get_serial_blacklist = get_serial_blacklist or (lambda: [])
+        
+        # 保存功能相关变量
+        self.is_saving = False
+        self.save_file = None
+        self.save_filepath = None
 
         # 串口配置
         self.top_group.setTitle('ESP32 日志')
@@ -97,8 +104,10 @@ class ESP32LogTab(BaseCommTab):
         row1_layout.addWidget(QtWidgets.QLabel('波特率:'))
         self.baud_combo = QtWidgets.QComboBox()
         self.baud_combo.setEditable(True)
-        self.baud_combo.addItems(['9600', '19200', '38400', '57600', '115200', '921600'])
+        self.baud_combo.addItems(['9600', '19200', '38400', '57600', '115200', '921600','1000000'])
         self.baud_combo.setCurrentText('115200')
+        # 设置波特率下拉框的最小宽度c
+        self.baud_combo.setMinimumWidth(120)
         row1_layout.addWidget(self.baud_combo)
 
         self.refresh_btn = QtWidgets.QPushButton('刷新')
@@ -107,6 +116,12 @@ class ESP32LogTab(BaseCommTab):
         # 打开/关闭按钮保留在后面
         self.toggle_btn = QtWidgets.QPushButton('打开')
         row1_layout.addWidget(self.toggle_btn)
+        
+        # 添加保存按钮
+        self.save_btn = QtWidgets.QPushButton('开始保存')
+        self.save_btn.setToolTip('开始实时保存串口接收数据到txt文件')
+        row1_layout.addWidget(self.save_btn)
+        
         row1_layout.addStretch(1)
         self.top_vbox.addWidget(row1)
         
@@ -173,6 +188,7 @@ class ESP32LogTab(BaseCommTab):
         self.refresh_btn.clicked.connect(self._refresh_ports)
         self.toggle_btn.clicked.connect(self._toggle)
         self.search_btn.clicked.connect(self._search_logs)
+        self.save_btn.clicked.connect(self._save_logs)
 
         self.log_batch_received.connect(self._update_log_from_batch)
         
@@ -278,6 +294,14 @@ class ESP32LogTab(BaseCommTab):
     def _update_log_from_batch(self, log_batch: list):
         for text, color in log_batch:
             self._log(text, color)
+            # 如果正在保存，将数据写入文件
+            if self.is_saving and self.save_file:
+                try:
+                    self.save_file.write(f'{text}\n')
+                    self.save_file.flush()  # 立即写入磁盘
+                except Exception as e:
+                    self._log(f'[ERROR] 写入保存文件失败: {str(e)}', 'red')
+                    self._stop_saving()  # 出错时停止保存
 
     def _search_logs(self):
         # 获取查询关键字
@@ -509,6 +533,90 @@ class ESP32LogTab(BaseCommTab):
         if hasattr(self, 'search_result_label'):
             self.search_result_label.setText('查找结果')
 
+    def _save_logs(self):
+        """开始/停止实时保存串口数据"""
+        if not self.is_saving:
+            # 开始保存
+            self._start_saving()
+        else:
+            # 停止保存
+            self._stop_saving()
+    
+    def _start_saving(self):
+        """开始实时保存"""
+        # 让用户选择保存目录
+        save_dir = QtWidgets.QFileDialog.getExistingDirectory(
+            self, 
+            '选择保存目录', 
+            os.path.expanduser('~')  # 默认为用户主目录
+        )
+        
+        if not save_dir:
+            return  # 用户取消了选择
+        
+        # 生成文件名：ESP32_Log_YYYYMMDD_HHMMSS.txt
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'ESP32_Log_{timestamp}.txt'
+        self.save_filepath = os.path.join(save_dir, filename)
+        
+        try:
+            # 打开文件用于写入
+            self.save_file = open(self.save_filepath, 'w', encoding='utf-8')
+            
+            # 写入文件头信息
+            self.save_file.write(f'ESP32 日志文件\n')
+            self.save_file.write(f'开始保存时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
+            self.save_file.write(f'串口: {self.port_combo.currentText()}\n')
+            self.save_file.write(f'波特率: {self.baud_combo.currentText()}\n')
+            self.save_file.write('=' * 50 + '\n\n')
+            self.save_file.flush()  # 立即写入磁盘
+            
+            # 更新状态
+            self.is_saving = True
+            self.save_btn.setText('停止保存')
+            self.save_btn.setToolTip('停止保存串口数据')
+            
+            # 在接收区域显示保存开始信息
+            self._log(f'[INFO] 开始保存日志至: {self.save_filepath}', 'green')
+            
+        except Exception as e:
+            # 显示错误消息
+            error_msg = f'开始保存失败: {str(e)}'
+            self._log(f'[ERROR] {error_msg}', 'red')
+            QtWidgets.QMessageBox.critical(self, '保存失败', error_msg)
+    
+    def _stop_saving(self):
+        """停止实时保存"""
+        if self.save_file:
+            try:
+                # 写入结束信息
+                self.save_file.write(f'\n\n结束保存时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
+                self.save_file.close()
+                self.save_file = None
+                
+                # 在接收区域显示保存完成信息
+                self._log(f'[INFO] 日志保存完成: {self.save_filepath}', 'green')
+                
+                # 显示成功消息
+                QtWidgets.QMessageBox.information(
+                    self, 
+                    '保存完成', 
+                    f'日志已成功保存至:\n{self.save_filepath}'
+                )
+                
+            except Exception as e:
+                error_msg = f'停止保存失败: {str(e)}'
+                self._log(f'[ERROR] {error_msg}', 'red')
+        
+        # 更新状态
+        self.is_saving = False
+        self.save_btn.setText('开始保存')
+        self.save_btn.setToolTip('开始实时保存串口接收数据到txt文件')
+        self.save_filepath = None
+
     def shutdown(self):
         super().shutdown()
         self._stop_read_thread()
+        # 确保保存文件正确关闭
+        if self.is_saving:
+            self._stop_saving()
