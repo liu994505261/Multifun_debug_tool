@@ -15,7 +15,12 @@ import zipfile
 import logging
 from datetime import datetime
 from typing import Optional, Callable
-import requests
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    requests = None
+    REQUESTS_AVAILABLE = False
 from PySide6 import QtCore, QtWidgets
 
 
@@ -288,6 +293,12 @@ class VersionManager(QtCore.QObject):
     def check_for_updates(self) -> None:
         """检查更新（在后台线程中执行）"""
         def _check():
+            if not REQUESTS_AVAILABLE:
+                self.logger.warning("Requests library not found, skipping update check")
+                self.check_error.emit("Requests library not found")
+                self.check_finished.emit(False)
+                return
+
             self.logger.log_operation_start("检查更新", current_version=self.current_version)
             
             try:
@@ -407,6 +418,10 @@ class VersionManager(QtCore.QObject):
             return
             
         def _download():
+            if not REQUESTS_AVAILABLE:
+                self.logger.warning("Requests library not found, skipping download")
+                self.download_error.emit("Requests library not found")
+                return
             self.logger.log_operation_start("下载最新版本")
             
             try:
@@ -491,6 +506,8 @@ class VersionManager(QtCore.QObject):
     
     def _download_with_fallback(self):
         """备用下载方案：直接构造GitHub Release下载链接"""
+        if not REQUESTS_AVAILABLE:
+            raise Exception("Requests library not found")
         self.logger.log_operation_start("备用下载方案")
         
         try:
@@ -553,6 +570,8 @@ class VersionManager(QtCore.QObject):
     
     def _download_file(self, download_url: str, filename: str):
         """下载文件的通用方法"""
+        if not REQUESTS_AVAILABLE:
+            raise Exception("Requests library not found")
         file_path = os.path.join(self.temp_dir, filename)
         self.logger.log_operation_start("下载文件", url=download_url, filename=filename, path=file_path)
         
