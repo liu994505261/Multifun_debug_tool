@@ -28,6 +28,7 @@ from app.plotter_tab import PlotterTab
 from app.analyzer_tab import ProtocolAnalyzerTab
 from app.esp32_log_tab import ESP32LogTab
 from app.esp32_flash_tab import ESP32FlashTab
+from app.firmware_merge_tab import FirmwareMergeTab
 from app.theme import ModernTheme
 from app.version_manager import VersionManager, UpdateDialog, DownloadProgressDialog
 
@@ -97,6 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.analyzer_tab = ProtocolAnalyzerTab(self.get_global_format)
         self.esp32_log_tab = ESP32LogTab(self.get_global_format, self.get_serial_blacklist)
         self.esp32_flash_tab = ESP32FlashTab(self.get_global_format, self.get_serial_blacklist)
+        self.firmware_merge_tab = FirmwareMergeTab()
 
         # 加载配置与应用字体
         self.tcp_tab.load_config(self.config.get('tcp', {}))
@@ -125,6 +127,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.addTab(self.analyzer_tab, '协议分析')
         self.tabs.addTab(self.esp32_log_tab, 'ESP32 Log')
         self.tabs.addTab(self.esp32_flash_tab, 'ESP32烧录')
+        self.tabs.addTab(self.firmware_merge_tab, '固件合并')
 
         # 录制文件句柄
         self.record_file = None
@@ -179,7 +182,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 页面变更信号接入自动保存
         try:
-            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab]:
+            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab, self.firmware_merge_tab]:
                 tab.changed.connect(lambda: self._schedule_save())
                 tab._install_autosave_hooks()
         except Exception:
@@ -404,7 +407,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=12)
         self.recv_font = self._get_ui_font('recv_font', default_family='Consolas', default_size=12)
         # 应用到所有标签页
-        for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab]:
+        for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab, self.firmware_merge_tab]:
             tab.apply_fonts(self.send_font, self.recv_font)
         # 加载各自配置
         self.tcp_tab.load_config(self.config.get('tcp', {}))
@@ -415,6 +418,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.analyzer_tab.load_config(self.config.get('analyzer', {}))
         self.esp32_log_tab.load_config(self.config.get('esp32_log', {}))
         self.esp32_flash_tab.load_config(self.config.get('esp32_flash', {}))
+        self.firmware_merge_tab.load_config(self.config.get('firmware_merge', {}))
         self._apply_theme(self.ui_theme)
         self.statusBar().showMessage('配置已加载', 3000)
 

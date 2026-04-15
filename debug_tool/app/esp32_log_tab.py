@@ -146,6 +146,14 @@ class ESP32LogTab(BaseCommTab):
             checkbox.setChecked(True)
             self.log_level_checks[level] = checkbox
             row2_layout.addWidget(checkbox)
+        
+        # 日志名称过滤
+        row2_layout.addWidget(QtWidgets.QLabel('日志名称:'))
+        self.log_name_filter_edit = QtWidgets.QLineEdit()
+        self.log_name_filter_edit.setPlaceholderText('输入日志名称，如: EmojiConfig,Backlight')
+        self.log_name_filter_edit.setMinimumWidth(200)
+        row2_layout.addWidget(self.log_name_filter_edit)
+        
         row2_layout.addStretch(1)
         self.top_vbox.addWidget(row2)
 
@@ -220,6 +228,10 @@ class ESP32LogTab(BaseCommTab):
             self.search_edit.textChanged.connect(lambda: self.changed.emit())
         except Exception:
             pass
+        try:
+            self.log_name_filter_edit.textChanged.connect(lambda: self.changed.emit())
+        except Exception:
+            pass
 
     def load_config(self, cfg: dict):
         super().load_config(cfg)
@@ -241,6 +253,7 @@ class ESP32LogTab(BaseCommTab):
         log_levels = cfg.get('log_levels', {})
         for level, checkbox in self.log_level_checks.items():
             checkbox.setChecked(log_levels.get(level, True))
+        self.log_name_filter_edit.setText(cfg.get('log_name_filter', ''))
 
     def get_config(self) -> dict:
         cfg = super().get_config()
@@ -248,8 +261,22 @@ class ESP32LogTab(BaseCommTab):
             'port': self.port_combo.currentData() or self.port_combo.currentText(),
             'baudrate': self.baud_combo.currentText(),
             'log_levels': {level: checkbox.isChecked() for level, checkbox in self.log_level_checks.items()},
+            'log_name_filter': self.log_name_filter_edit.text(),
         })
         return cfg
+
+    def apply_fonts(self, send_font: QtGui.QFont, recv_font: QtGui.QFont):
+        # 强制接收区使用等宽字体，解决对齐问题
+        # 优先使用 Consolas，其次 Courier New
+        f = QtGui.QFont(recv_font)
+        f.setFamily("Consolas")
+        f.setStyleHint(QtGui.QFont.StyleHint.Monospace)
+        f.setFixedPitch(True)
+        if not QtGui.QFontInfo(f).exactMatch():
+            f.setFamily("Courier New")
+        
+        # 调用父类应用字体
+        super().apply_fonts(send_font, f)
 
     def _toggle(self):
         if self.serial is not None and self.serial.is_open:
@@ -447,6 +474,24 @@ class ESP32LogTab(BaseCommTab):
 
                         if level and not self.log_level_checks[level].isChecked():
                             continue
+
+                        # 日志名称过滤
+                        filter_text = self.log_name_filter_edit.text().strip()
+                        if filter_text:
+                            # 提取日志名称：格式如 "I (3126) EmojiConfig: ..."
+                            # 名称在 ") " 和 ": " 之间
+                            log_name = None
+                            idx1 = text.find(') ')
+                            if idx1 != -1:
+                                idx2 = text.find(': ', idx1 + 2)
+                                if idx2 != -1:
+                                    log_name = text[idx1 + 2:idx2].strip()
+                            
+                            if log_name:
+                                # 检查是否在过滤列表中（逗号分隔）
+                                filter_names = [name.strip() for name in filter_text.split(',')]
+                                if log_name not in filter_names:
+                                    continue
 
                         log_batch.append((text, color))
                     except UnicodeDecodeError:
