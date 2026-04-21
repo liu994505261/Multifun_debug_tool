@@ -232,12 +232,18 @@ class BaseCommTab(QtWidgets.QWidget):
             'green': palette['success'],
             'blue': palette['accent'],
             'orange': palette['warning'],
-            'black': palette['text'], # 'black' was default, now map to text
+            'black': palette['input_text'], # 'black' maps to input text color
         }
         
-        hex_color = col_map.get(color, palette['text'])
+        # 处理颜色：支持十六进制颜色代码和颜色名称
         if color is None:
-            hex_color = palette['text']
+            hex_color = palette['input_text']
+        elif isinstance(color, str) and color.startswith('#'):
+            # 直接使用十六进制颜色代码
+            hex_color = color
+        else:
+            # 在颜色映射中查找颜色名称
+            hex_color = col_map.get(color, palette['input_text'])
 
         cursor = self.recv_text.textCursor()
         cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)

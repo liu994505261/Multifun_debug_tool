@@ -1,4 +1,5 @@
 from PySide6 import QtWidgets, QtCore, QtGui
+from app.theme import ModernTheme
 
 class PlotterTab(QtWidgets.QWidget):
     changed = QtCore.Signal()
@@ -154,8 +155,38 @@ class SimpleChartWidget(QtWidgets.QWidget):
         self.setBackgroundRole(QtGui.QPalette.Base)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setAttribute(QtCore.Qt.WA_StyledBackground, True) # Allow QSS background
-        self.setStyleSheet("background-color: #1e1e1e; border: 1px solid #555;") # Default dark bg
         self.setMouseTracking(True) # For potential crosshair
+        # Set object name for theme styling
+        self.setObjectName("plotCanvas")
+        # Initialize theme colors
+        self._update_theme_colors()
+
+    def _update_theme_colors(self):
+        """Update colors based on current theme"""
+        # Try to detect theme from application
+        try:
+            mw = QtWidgets.QApplication.activeWindow()
+            if mw and hasattr(mw, 'ui_theme') and mw.ui_theme == 'light':
+                palette = ModernTheme.light_palette()
+            else:
+                palette = ModernTheme.dark_palette()
+        except:
+            palette = ModernTheme.dark_palette()
+        
+        # Store colors for use in painting
+        self.bg_color = palette['surface']  # Use surface color for background
+        self.border_color = palette['border']
+        self.grid_color = palette['border']  # Use border color for grid
+        self.text_color = palette['text']
+        self.data_line_color = palette['accent']  # Use accent color for data line
+        
+        # Update stylesheet for background and border
+        self.setStyleSheet(f"""
+            QWidget#plotCanvas {{
+                background-color: {self.bg_color};
+                border: 1px solid {self.border_color};
+            }}
+        """)
 
     def set_y_range(self, y_min, y_max):
         self.y_min = y_min
@@ -213,7 +244,7 @@ class SimpleChartWidget(QtWidgets.QWidget):
         painter.translate(left_margin, 0)
         
         # Draw Background Grid & Ruler
-        painter.setPen(QtGui.QPen(QtGui.QColor(80, 80, 80), 1, QtCore.Qt.DotLine))
+        painter.setPen(QtGui.QPen(QtGui.QColor(self.grid_color), 1, QtCore.Qt.DotLine))
         font = painter.font()
         font.setPointSize(8)
         painter.setFont(font)
@@ -225,13 +256,13 @@ class SimpleChartWidget(QtWidgets.QWidget):
             y_pos = y_ratio * plot_h
             
             # Grid line
-            painter.setPen(QtGui.QPen(QtGui.QColor(80, 80, 80), 1, QtCore.Qt.DotLine))
+            painter.setPen(QtGui.QPen(QtGui.QColor(self.grid_color), 1, QtCore.Qt.DotLine))
             painter.drawLine(0, int(y_pos), plot_w, int(y_pos))
             
             # Ruler Text (Left side)
             val = self.y_max - (self.y_max - self.y_min) * y_ratio
             text = f"{val:.1f}"
-            painter.setPen(QtGui.QPen(QtGui.QColor(200, 200, 200)))
+            painter.setPen(QtGui.QPen(QtGui.QColor(self.text_color)))
             painter.drawText(QtCore.QRect(-left_margin, int(y_pos) - 10, left_margin - 5, 20), 
                              QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter, text)
 
@@ -241,7 +272,7 @@ class SimpleChartWidget(QtWidgets.QWidget):
             x_ratio = i / x_steps
             x_pos = x_ratio * plot_w
             
-            painter.setPen(QtGui.QPen(QtGui.QColor(80, 80, 80), 1, QtCore.Qt.DotLine))
+            painter.setPen(QtGui.QPen(QtGui.QColor(self.grid_color), 1, QtCore.Qt.DotLine))
             painter.drawLine(int(x_pos), 0, int(x_pos), plot_h)
 
         # Draw Data
@@ -249,7 +280,7 @@ class SimpleChartWidget(QtWidgets.QWidget):
             return
 
         # Pen for line
-        painter.setPen(QtGui.QPen(QtGui.QColor(0, 120, 212), 2))
+        painter.setPen(QtGui.QPen(QtGui.QColor(self.data_line_color), 2))
         
         x_step = plot_w / (self.max_points - 1)
         

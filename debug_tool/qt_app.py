@@ -10,6 +10,7 @@ import os
 import sys
 
 from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6.QtGui import QFontDatabase
 
 """
 Ensure local package imports work even if the script is launched
@@ -64,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.config = self._load_config()
         self.global_format = self.config.get('format', 'ASCII')
         self.serial_blacklist = list(self.config.get('serial_blacklist', []))
-        self.ui_theme = (self.config.get('ui', {}) or {}).get('theme', 'light')
+        self.ui_theme = (self.config.get('ui', {}) or {}).get('theme', 'dark')
 
         # 恢复窗口几何（位置/大小/最大化）
         try:
@@ -81,9 +82,20 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception:
             pass
 
+        # 加载内嵌字体
+        self.embedded_font_family = None
+        font_path = os.path.join(os.path.dirname(__file__), 'font', 'consola.ttf')
+        if os.path.exists(font_path):
+            font_id = QFontDatabase.addApplicationFont(font_path)
+            if font_id != -1:
+                families = QFontDatabase.applicationFontFamilies(font_id)
+                if families:
+                    self.embedded_font_family = families[0]
+        
         # 字体（遵循原配置结构 ui.send_font / ui.recv_font）
-        self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=12)
-        self.recv_font = self._get_ui_font('recv_font', default_family='Consolas', default_size=12)
+        default_font_family = self.embedded_font_family or 'Consolas'
+        self.send_font = self._get_ui_font('send_font', default_family=default_font_family, default_size=18)
+        self.recv_font = self._get_ui_font('recv_font', default_family=default_font_family, default_size=18)
 
         # 中心区域：标签页
         self.tabs = QtWidgets.QTabWidget()
@@ -197,8 +209,9 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.addAction('退出', self.close)
 
         settings_menu = menu.addMenu('设置')
-        # settings_menu.addAction('字体与大小...', self._show_font_settings) # 移除
+        settings_menu.addAction('字体大小...', self._show_font_settings)
         settings_menu.addAction('串口黑名单...', self._show_serial_blacklist_settings)
+        settings_menu.addAction('日志颜色设置...', self._show_log_color_settings)
         self.dark_theme_action = QtGui.QAction('深色主题', self)
         self.dark_theme_action.setCheckable(True)
         self.dark_theme_action.setChecked(self.ui_theme == 'dark')
@@ -288,6 +301,11 @@ class MainWindow(QtWidgets.QMainWindow):
         app = QtWidgets.QApplication.instance()
         if app:
             app.setStyleSheet(ModernTheme.get_qss(theme))
+        # 更新ESP32日志标签页的主题设置
+        try:
+            self.esp32_log_tab.set_theme(theme)
+        except Exception:
+            pass
 
     def _on_dark_theme_toggled(self, checked: bool):
         self.ui_theme = 'dark' if checked else 'light'
@@ -404,8 +422,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui_theme = (self.config.get('ui', {}) or {}).get('theme', 'light')
         self.format_combo.setCurrentText(self.global_format)
         # 字体应用
-        self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=12)
-        self.recv_font = self._get_ui_font('recv_font', default_family='Consolas', default_size=12)
+        self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=18)
+        self.recv_font = self._get_ui_font('recv_font', default_family='Consolas', default_size=18)
         # 应用到所有标签页
         for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, self.esp32_flash_tab, self.firmware_merge_tab]:
             tab.apply_fonts(self.send_font, self.recv_font)
@@ -481,10 +499,225 @@ class MainWindow(QtWidgets.QMainWindow):
         cancel_btn.clicked.connect(dlg.reject)
         dlg.exec()
 
+    def _show_log_color_settings(self):
+        # 获取当前颜色设置
+        current_colors = self.esp32_log_tab.current_log_colors.copy()
+        
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle('日志颜色设置')
+        dlg.setFixedSize(500, 300)
+        layout = QtWidgets.QVBoxLayout(dlg)
+        
+        # 说明标签
+        info = QtWidgets.QLabel('设置不同日志级别的显示颜色（十六进制格式，如#FF0000）')
+        layout.addWidget(info)
+        
+        # 颜色设置表格
+        table = QtWidgets.QTableWidget(5, 3)
+        table.setHorizontalHeaderLabels(['日志级别', '颜色代码', '预览'])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.verticalHeader().setVisible(False)
+        table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.DoubleClicked)
+        
+        levels = ['Error', 'Warning', 'Info', 'Debug', 'Verbose']
+        level_display = {
+            'Error': '错误',
+            'Warning': '警告',
+            'Info': '信息',
+            'Debug': '调试',
+            'Verbose': '详细'
+        }
+        
+        self.color_edits = {}  # 临时存储编辑框引用
+        self.color_previews = {}  # 临时存储预览标签引用
+        
+        for i, level in enumerate(levels):
+            # 日志级别
+            level_item = QtWidgets.QTableWidgetItem(level_display.get(level, level))
+            level_item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+            table.setItem(i, 0, level_item)
+            
+            # 颜色代码编辑框
+            color_edit = QtWidgets.QLineEdit()
+            color_edit.setText(current_colors.get(level, '#000000'))
+            color_edit.setPlaceholderText('#RRGGBB')
+            color_edit.setToolTip(f'输入{level}级别的十六进制颜色代码')
+            self.color_edits[level] = color_edit
+            table.setCellWidget(i, 1, color_edit)
+            
+            # 颜色预览标签
+            preview_label = QtWidgets.QLabel()
+            preview_label.setFixedSize(24, 24)
+            color_value = current_colors.get(level, '#000000')
+            if color_value and color_value.startswith('#') and len(color_value) >= 4:
+                try:
+                    QtGui.QColor(color_value)
+                    preview_label.setStyleSheet(f"background-color: {color_value}; border: 1px solid #cccccc;")
+                except:
+                    preview_label.setStyleSheet(f"background-color: #ffffff; border: 1px solid #ff0000;")
+            else:
+                preview_label.setStyleSheet(f"background-color: #ffffff; border: 1px solid #ff0000;")
+            preview_label.setToolTip(f'{level}颜色预览')
+            self.color_previews[level] = preview_label
+            table.setCellWidget(i, 2, preview_label)
+            
+            # 连接文本变化信号以更新预览
+            def make_update_preview_callback(lvl, preview_widget):
+                def update_preview(text):
+                    if text and text.startswith('#') and len(text) >= 4:
+                        try:
+                            QtGui.QColor(text)
+                            preview_widget.setStyleSheet(f"background-color: {text}; border: 1px solid #cccccc;")
+                        except:
+                            preview_widget.setStyleSheet(f"background-color: #ffffff; border: 1px solid #ff0000;")
+                    else:
+                        preview_widget.setStyleSheet(f"background-color: #ffffff; border: 1px solid #ff0000;")
+                return update_preview
+            
+            color_edit.textChanged.connect(make_update_preview_callback(level, preview_label))
+        
+        table.resizeColumnsToContents()
+        layout.addWidget(table)
+        
+        # 按钮
+        btns = QtWidgets.QHBoxLayout()
+        apply_btn = QtWidgets.QPushButton('应用')
+        cancel_btn = QtWidgets.QPushButton('取消')
+        reset_btn = QtWidgets.QPushButton('恢复默认')
+        btns.addWidget(reset_btn)
+        btns.addStretch(1)
+        btns.addWidget(apply_btn)
+        btns.addWidget(cancel_btn)
+        layout.addLayout(btns)
+        
+        def do_reset():
+            default_colors = {
+                'Error': '#ff0000',
+                'Warning': '#EEBE2F',
+                'Info': '#50DA56',
+                'Debug': '#0000ff',
+                'Verbose': '#800080'
+            }
+            for level in levels:
+                self.color_edits[level].setText(default_colors[level])
+        
+        def do_apply():
+            # 更新颜色字典
+            new_colors = {}
+            for level in levels:
+                color_text = self.color_edits[level].text().strip()
+                if color_text:
+                    new_colors[level] = color_text
+                else:
+                    new_colors[level] = '#000000'
+            
+            # 保存到ESP32日志标签页
+            self.esp32_log_tab.current_log_colors = new_colors
+            # 触发配置保存
+            self.esp32_log_tab.changed.emit()
+            self._schedule_save()
+            dlg.accept()
+        
+        reset_btn.clicked.connect(do_reset)
+        apply_btn.clicked.connect(do_apply)
+        cancel_btn.clicked.connect(dlg.reject)
+        
+        dlg.exec()
+
     # 字体设置
     def _show_font_settings(self):
-        # 移除
-        pass
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle('字体大小设置')
+        dlg.setFixedSize(400, 200)
+        layout = QtWidgets.QVBoxLayout(dlg)
+        
+        # 说明标签
+        info = QtWidgets.QLabel('设置发送区和接收区的字体大小')
+        layout.addWidget(info)
+        
+        # 发送字体大小
+        send_layout = QtWidgets.QHBoxLayout()
+        send_layout.addWidget(QtWidgets.QLabel('发送区字体大小:'))
+        send_size_spin = QtWidgets.QSpinBox()
+        send_size_spin.setRange(8, 24)
+        send_size_spin.setValue(self.send_font.pointSize())
+        send_layout.addWidget(send_size_spin)
+        send_layout.addStretch(1)
+        layout.addLayout(send_layout)
+        
+        # 接收字体大小
+        recv_layout = QtWidgets.QHBoxLayout()
+        recv_layout.addWidget(QtWidgets.QLabel('接收区字体大小:'))
+        recv_size_spin = QtWidgets.QSpinBox()
+        recv_size_spin.setRange(8, 24)
+        recv_size_spin.setValue(self.recv_font.pointSize())
+        recv_layout.addWidget(recv_size_spin)
+        recv_layout.addStretch(1)
+        layout.addLayout(recv_layout)
+        
+        # 预览标签
+        preview_label = QtWidgets.QLabel('预览: ABCabc123')
+        preview_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(preview_label)
+        
+        def update_preview():
+            send_font = QtGui.QFont(self.send_font)
+            send_font.setPointSize(send_size_spin.value())
+            recv_font = QtGui.QFont(self.recv_font)
+            recv_font.setPointSize(recv_size_spin.value())
+            # 更新预览标签字体（使用接收区字体）
+            preview_label.setFont(recv_font)
+        
+        send_size_spin.valueChanged.connect(lambda _: update_preview())
+        recv_size_spin.valueChanged.connect(lambda _: update_preview())
+        update_preview()  # 初始预览
+        
+        # 按钮
+        btns = QtWidgets.QHBoxLayout()
+        apply_btn = QtWidgets.QPushButton('应用')
+        cancel_btn = QtWidgets.QPushButton('取消')
+        btns.addStretch(1)
+        btns.addWidget(apply_btn)
+        btns.addWidget(cancel_btn)
+        layout.addLayout(btns)
+        
+        def do_apply():
+            # 更新字体大小
+            send_size = send_size_spin.value()
+            recv_size = recv_size_spin.value()
+            
+            # 更新配置
+            if 'ui' not in self.config:
+                self.config['ui'] = {}
+            if 'send_font' not in self.config['ui']:
+                self.config['ui']['send_font'] = {}
+            if 'recv_font' not in self.config['ui']:
+                self.config['ui']['recv_font'] = {}
+            
+            self.config['ui']['send_font']['size'] = send_size
+            self.config['ui']['recv_font']['size'] = recv_size
+            
+            # 更新当前字体
+            self.send_font.setPointSize(send_size)
+            self.recv_font.setPointSize(recv_size)
+            
+            # 应用字体到所有标签页
+            for tab in [self.tcp_tab, self.udp_tab, self.serial_tab, self.modbus_tab, 
+                       self.plotter_tab, self.analyzer_tab, self.esp32_log_tab, 
+                       self.esp32_flash_tab, self.firmware_merge_tab]:
+                try:
+                    tab.apply_fonts(self.send_font, self.recv_font)
+                except Exception:
+                    pass
+            
+            # 触发配置保存
+            self._schedule_save()
+            dlg.accept()
+        
+        apply_btn.clicked.connect(do_apply)
+        cancel_btn.clicked.connect(dlg.reject)
+        
+        dlg.exec()
 
     def _show_about(self):
         about_text = f"""通信测试上位机

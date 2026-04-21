@@ -1,0 +1,1082 @@
+ESP32 日志文件
+开始保存时间: 2026-04-17 15:41:16
+串口: COM43 - USB 串行设备 (COM43)
+波特率: 115200
+==================================================
+
+I (83263) EmojiConfig: Library match: normal -> selected random ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x17 (CHIP_USB_UART_RESET),boot:0x1c (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4815de76
+Core1 Saved PC:0x4ff0606e
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x5a0
+load:0x4ff29ed0,len:0xce8
+load:0x4ff2cbd0,len:0x33dc
+entry 0x4ff29ed0
+I (44) hex_psram: vendor id    : 0x0d (AP)
+I (45) hex_psram: Latency      : 0x01 (Fixed)
+I (45) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (46) hex_psram: dev id       : 0x03 (generation 4)
+I (50) hex_psram: density      : 0x07 (256 Mbit)
+I (54) hex_psram: good-die     : 0x06 (Pass)
+I (58) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (63) hex_psram: BurstType    : 0x00 ( Wrap)
+I (67) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (71) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (76) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (81) hex_psram: DriveStrength: 0x00 (1/1)
+I (85) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (346) mmu_psram: .rodata xip on psram
+I (508) mmu_psram: .text xip on psram
+I (509) hex_psram: psram CS IO is dedicated
+I (509) cpu_start: Multicore app
+I (519) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (519) cpu_start: Pro cpu start user code
+I (520) cpu_start: cpu freq: 360000000 Hz
+I (521) app_init: Application information:
+I (525) app_init: Project name:     Carjoy
+I (529) app_init: App version:      1.1.4
+I (533) app_init: Compile time:     Apr 17 2026 14:38:17
+I (538) app_init: ELF file SHA256:  55fd00d1f...
+I (542) app_init: ESP-IDF:          30aaf645-dirty
+I (546) efuse_init: Min chip rev:     v0.1
+I (550) efuse_init: Max chip rev:     v1.99
+I (554) efuse_init: Chip rev:         v1.0
+I (558) heap_init: Initializing. RAM available for dynamic allocation:
+I (564) heap_init: At 4FF2AA50 len 00010570 (65 KiB): RETENT_RAM
+I (570) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (575) heap_init: At 4FF40060 len 0005FFA0 (383 KiB): RAM
+I (581) heap_init: At 501080A0 len 00007F60 (31 KiB): RTCRAM
+I (586) heap_init: At 30100068 len 00001F98 (7 KiB): TCM
+I (591) esp_psram: Adding pool of 28416K of PSRAM memory to heap allocator
+I (597) esp_psram: Adding pool of 56K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (609) esp_psram: Adding pool of 37K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (620) spi_flash: detected chip: generic
+W (623) spi_flash: Detected flash size > 16 MB, but access beyond 16 MB is not supported for this flash model yet.
+I (633) spi_flash: flash io: qio
+I (676) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (682) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (689) main_task: Started on CPU0
+I (692) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (700) main_task: Calling app_main()
+I (819) Board: UUID=1247c817-6016-4398-858d-c1f0fafa3a9b SKU=waveshare-p4-wifi6-touch-lcd-4b
+I (819) button: IoT Button Version: 4.1.6
+I (820) WaveshareEsp32p44b: Enable VCI_EN on GPIO 7
+I (834) WaveshareEsp32p44b: MIPI DSI PHY Powered on
+I (834) WaveshareEsp32p44b: Initialize MIPI DSI bus
+I (835) WaveshareEsp32p44b: Install panel IO
+I (837) WaveshareEsp32p44b: Install LCD driver of co5300
+I (842) co5300: version: 2.0.3
+I (845) co5300_mipi: version: 2.0.3
+I (998) co5300_mipi: LCD ID: 33 11 00
+W (998) co5300_mipi: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (1620) Display: Power management not supported
+I (1620) LcdDisplay: Initialize LVGL adapter
+I (1620) esp_lvgl:adapter: LVGL adapter initialized successfully
+I (1623) LcdDisplay: Adding LCD display via adapter
+I (1629) esp_lvgl:bridge_v9: Initializing hardware resources
+I (1633) esp_lvgl:bridge_v9: Hardware resources initialized successfully
+I (1640) esp_lvgl:adapter: LVGL task started successfully
+I (1644) LcdDisplay: SetupUI called
+I (1648) LcdDisplay: emoji_image_ created successfully in SetupUI
+I (1654) LcdDisplay: SetupUI completed
+I (1657) WaveshareEsp32p44b: Initialize Touch
+I (1661) WaveshareEsp32p44b: Touch Pins: SDA=53, SCL=54, RST=-1, INT=-1
+I (1667) WaveshareEsp32p44b: Scanning I2C bus...
+I (1687) WaveshareEsp32p44b: I2C device found at address 0x5a
+I (1706) CST9217: Checkcode: 0x3075CACA
+I (1709) CST9217: Resolution X: 410, Y: 502
+I (1712) CST9217: Chip Type: 0x9217, ProjectID: 0x67A5
+I (1712) WaveshareEsp32p44b: Touch driver initialized successfully at 0x5A
+I (1714) WaveshareEsp32p44b: Touch initialized
+I (1718) WaveshareEsp32p44b: Initializing SD card
+W (1723) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (1730) WaveshareEsp32p44b: SD LDO channel 4 enabled
+I (1787) WaveshareEsp32p44b: SD card mounted successfully
+Name: SDN1G
+Type: SDSC
+Speed: 40.00 MHz (limit: 40.00 MHz)
+Size: luMB
+CSD: ver=1, sector_size=512, capacity=247808 read_bl_len=10
+SSR: bus_width=4
+I (1795) WaveshareEsp32p44b: SD root directory files:
+I (1800) WaveshareEsp32p44b: File: ASR_Firmware
+I (1804) WaveshareEsp32p44b: File: index.json
+I (1808) WaveshareEsp32p44b: File: config
+I (1812) WaveshareEsp32p44b: File: image
+I (1815) SD_CLEAN: Starting background task to process leftover .zip files on SD card
+I (1823) WaveshareEsp32p44b: Initializing IMU (LSM6DSO)
+E (1828) i2c.master: i2c_master_get_bus_handle(1241): invalid i2c port number
+I (1835) i2c_bus: i2c4 software bus inited
+I (1838) i2c_bus: I2C Bus V2 Config Succeed, Version: 1.5.1
+I (1844) LSM6DSO: WHO_AM_I: 0x6a
+I (1897) LSM6DSO: LSM6DSO Initialized
+I (1897) WaveshareEsp32p44b: LSM6DSO initialized successfully
+I (1897) ImuProcessor: Loaded Gyro Offset: 0.000, 0.000, 0.000
+I (1900) ImuProcessor: Set Sensitivity: 60% -> Accel: 1.20g, Gyro: 100.00dps
+I (1907) ImuProcessor: Initialized with sensor 0x4ff5dd78 on pin 23
+I (1913) ImuProcessor: Started processing task
+I (1917) MotorDriver: Motor Driver Initialized (IN1=51, IN2=50, nSLEEP=52)
+I (1925) WaveshareEsp32p44b: Initialized shared ADC Unit 0 for Servo and Temp
+I (1931) temperature_sensor: Range [-10°C ~ 80°C], error < 1°C
+I (1938) esp_lvgl:bridge: Initializing hardware resources
+I (1942) esp_lvgl:bridge: Hardware resources initialized successfully
+I (1948) ServoController: 已加载电机方向: 1, 已校准=1
+I (1954) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (1961) ServoController: 舵机控制器初始化完成 (通道 3)。目标设置为 0.0。
+I (1969) WaveshareEsp32p44b: Servo Controller started on GPIO 19
+I (1975) BoxAudioCodec: Duplex channels created
+I (1983) ES8311: Work in Slave mode
+I (1989) ES7210: Work in Slave mode
+I (1996) ES7210: Enable ES7210_INPUT_MIC1
+I (1998) ES7210: Enable ES7210_INPUT_MIC2
+I (2001) ES7210: Enable ES7210_INPUT_MIC3
+I (2004) ES7210: Enable ES7210_INPUT_MIC4
+I (2007) ES7210: Enable TDM mode
+I (2011) BoxAudioCodec: BoxAudioDevice initialized
+I (2011) AudioCodec: Set output volume to 80
+I (2012) StateMachine: State: unknown -> starting
+I (2016) EmojiConfig: EnsureSdEmojiAssetsReady: sd_seeded=1
+I (2022) EmojiConfig: EnsureSdEmojiAssetsReady: /sdcard mounted, ensure /sdcard/config=1
+I (2029) EmojiConfig: EnsureSdEmojiAssetsReady: sd_config_path exists=1
+I (2036) Assets: The storage free size is 65536 KB
+I (2040) Assets: The partition size is 8192 KB
+I (2044) Assets: Stored assets info: files=214, len=3916343, checksum=0xc880
+I (2051) Assets: Assets partition already verified (checksum: 0xc880), skipping calculation
+I (2063) EmojiConfig: EnsureSdEmojiAssetsReady: asset_config_name=emoji_config.json
+I (2083) EmojiConfig: EnsureSdEmojiAssetsReady: read config from SD size=23752
+I (2099) EmojiConfig: EnsureSdEmojiAssetsReady: emoji_dirs=53
+I (2099) EmojiConfig: EnsureSdEmojiAssetsReady: assets .jpg count=189
+I (2690) EmojiConfig: Seeded SD emoji images: matched=188 copied=0 skipped=188 failed=0
+I (2690) EmojiConfig: Emoji SD seeding done, flag stored in NVS
+I (2717) EmojiConfig: Loaded config version: V2.9.0 (normalized from: V2.9)
+I (2722) EmojiConfig: === User owned emoji libraries (9) ===
+I (2722) EmojiConfig: Current Config Version: V2.9.0
+I (2723) EmojiConfig:   [amIB]: 2 emojis -> confused(V1.0.0), makeH(V1.0.0)
+I (2730) EmojiConfig:   [amIH]: 2 emojis -> confused(V1.0.0), makeH(V1.0.0)
+I (2736) EmojiConfig:   [blowB]: 1 emojis -> blowB(V1.0.0)
+I (2741) EmojiConfig:   [bluet]: 1 emojis -> received(V1.0.0)
+I (2751) EmojiConfig:   [normal]: 17 emojis -> dExpress(V0.0.0), blinkE(V1.0.0), lookAro(V1.0.0), rubEyes(V1.0.0), laugh(V1.0.0), playful(V1.0.0), gloomy(V1.0.0), eatBur(V1.0.0), makeH(V1.0.0), makeFace(V1.0.0), makeFace(V1.0.0), drink(V1.0.0), playGame(V1.0.0), wearSun(V1.0.0), dozeOff(V1.0.0), blowB(V1.0.0), playGui(V1.0.0)
+I (2775) EmojiConfig:   [powerOn]: 1 emojis -> popIn(V0.0.0)
+I (2781) EmojiConfig:   [received]: 1 emojis -> received(V1.0.0)
+I (2786) EmojiConfig:   [tapS]: 1 emojis -> confused(V1.0.0)
+I (2792) EmojiConfig:   [youAreH]: 2 emojis -> wearSun(V1.0.0), playful(V1.0.0)
+I (2799) EmojiConfig: ===================================
+I (2804) Backlight: Set brightness to 50
+I (2807) Application: Restored display brightness
+I (2812) LcdDisplay: SetEmotion: powerOn, audio: 1
+I (2816) EmojiConfig: Library match: powerOn -> selected random emoji: popIn
+I (2823) LcdDisplay: Found JSON emoji config for scenario/emotion: powerOn, loop=0
+I (2830) LcdDisplay: PlayEmojiInternal: popIn, path: /popIn, audio: 1
+I (2837) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/popIn
+I (2853) JsonEmojiPlayer: Started emoji: popIn, path: /popIn, total_frames: 179
+I (2857) uart: ESP_INTR_FLAG_IRAM flag not set while CONFIG_UART_ISR_IN_IRAM is enabled, flag updated
+I (2863) CI1302_App: CI1302 App UART initialized on TX:48 RX:47
+I (2866) I2S_IF: channel mode 2 bits:16/16 channel:4 mask:3
+I (2872) I2S_IF: TDM Mode 0 bits:16/16 channel:4 sample_rate:24000 mask:3
+I (2878) I2S_IF: channel mode 0 bits:16/16 channel:4 mask:3
+I (2884) I2S_IF: STD Mode 1 bits:32/32 channel:4 sample_rate:24000 mask:0
+I (2893) ES7210: Bits 16
+I (2902) ES7210: Enable ES7210_INPUT_MIC1
+I (2905) ES7210: Enable ES7210_INPUT_MIC2
+I (2908) ES7210: Enable ES7210_INPUT_MIC3
+I (2911) ES7210: Enable ES7210_INPUT_MIC4
+I (2914) ES7210: Enable TDM mode
+I (2922) ES7210: Unmuted
+I (2922) Adev_Codec: Open codec device OK
+I (2923) AudioCodec: Set input enable to true
+I (2923) I2S_IF: Mode 0 need extend bits 64 to 32
+I (2926) I2S_IF: channel mode 0 bits:16/32 channel:2 mask:1
+W (2932) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (2952) I2S_IF: STD Mode 1 bits:16/32 channel:2 sample_rate:24000 mask:1
+I (2989) Adev_Codec: Open codec device OK
+I (2990) AudioCodec: Set output enable to true
+I (2990) AudioCodec: Audio codec started
+I (2991) OpusResampler: Resampler configured with input sample rate 24000 and output sample rate 16000
+I (2999) OpusResampler: Resampler configured with input sample rate 24000 and output sample rate 16000
+I (3012) MCP: Add tool: self.get_device_status
+I (3012) MCP: Add tool: self.audio_speaker.set_volume
+I (3017) MCP: Add tool: self.screen.set_brightness
+I (3021) MCP: Add tool: self.screen.set_auto_brightness
+I (3027) MCP: Add tool: self.screen.get_auto_brightness
+I (3224) MCP: Add tool: play_expression
+I (3224) MCP: Add tool: self.screen.set_theme
+I (3224) MCP: Add tool: self.get_system_info [user]
+I (3227) MCP: Add tool: self.reboot [user]
+I (3229) MCP: Add tool: self.upgrade_firmware [user]
+I (3236) MCP: Add tool: self.screen.get_info [user]
+I (3239) MCP: Add tool: self.screen.snapshot [user]
+I (3247) MCP: Add tool: self.screen.preview_image [user]
+I (3248) MCP: Add tool: self.assets.set_download_url [user]
+I (3253) MCP: Add tool: show_expression
+I (3257) MCP: Add tool: device_control
+I (3265) MCP: Add tool: exit_conversation
+I (3265) Memory: Free PSRAM: 27423292 bytes
+I (3277) WifiManager: Initializing...
+I (3278) transport: Attempt connection with slave: retry[0]
+I (3278) transport: Reset slave using GPIO[5]
+I (3280) os_wrapper_esp: GPIO [5] configured
+I (4889) os_wrapper_esp: GPIO [33] configuring as Interrupt
+E (4889) gpio: gpio_install_isr_service(530): GPIO isr service already installed
+I (5038) transport: Received INIT event from ESP32 peripheral
+I (5038) transport: EVENT: 12
+I (5038) transport: EVENT: 11
+I (5038) transport: capabilities: 0x88
+I (5041) transport: Features supported are:
+I (5045) transport: 	   - BLE only
+I (5048) transport: EVENT: 16
+I (5051) transport: extended capabilities: 0x31
+I (5055) transport: Extended Features supported:
+I (5059) transport: 	 * SPI HD 2 data lines interface
+I (5064) transport: 	 * WLAN
+I (5067) transport: 	 * BT/BLE
+I (5070) transport: EVENT: 13
+I (5072) transport: ESP board type is : 5
+I (5076) transport: configure SPI_HD interface to use 2 data lines
+I (5082) spi_hd_wrapper: use 2 data lines
+I (5086) transport: Base transport is set-up
+I (5090) transport: Slave chip Id[12]
+I (5094) vhci_drv: Host BT Support: Enabled
+I (5098) vhci_drv: 	BT Transport Type: VHCI
+I (5101) H_SPI_HD_DRV: Received INIT event
+I (5105) rpc_wrap: --- ESP Event: Slave ESP Init ---
+I (6009) WifiManager: Initialized
+I (6010) WifiBoard: Starting WiFi connection attempt
+I (6010) WifiManager: Starting station
+I (6032) transport: Attempt connection with slave: retry[0]
+I (6032) transport: Transport is already up
+I (6054) rpc_req: Scan start Req
+I (6065) WifiBoard: WiFi scanning
+I (6077) BLUETOOTH_DRIVER: gatts_event_handler , event= 0
+I (6077) BLUETOOTH_DRIVER: GATT server register, status 0, app_id 2, gatts_if 3
+I (6079) Memory: Free PSRAM: 27423176 bytes
+I (6080) BLUETOOTH_DRIVER: gatts_event_handler , event= 7
+I (6087) BLUETOOTH_DRIVER: Service create, status 0, app_id 40, gatts_if 3
+I (6099) BLUETOOTH_DRIVER: Advertising start complete event
+I (6099) BLUETOOTH_DRIVER: Advertising start successfully
+I (6104) BLUETOOTH_DRIVER: gatts_event_handler , event= 12
+I (6109) BLUETOOTH_DRIVER: Service start, status 0, service_handle 40
+I (6116) BLUETOOTH_DRIVER: gatts_event_handler , event= 9
+I (6121) BLUETOOTH_DRIVER: Characteristic add, status 0, attr_handle 42, service_handle 40
+I (6129) BLUETOOTH_DRIVER: NORIC UART RX characteristic handle: 42
+I (6135) BLUETOOTH_DRIVER: the gatts demo char length = 3
+I (6140) BLUETOOTH_DRIVER: prf_char[0] =11
+I (6143) BLUETOOTH_DRIVER: prf_char[1] =22
+I (6147) BLUETOOTH_DRIVER: prf_char[2] =33
+I (6151) BLUETOOTH_DRIVER: gatts_event_handler , event= 9
+I (6156) BLUETOOTH_DRIVER: Characteristic add, status 0, attr_handle 44, service_handle 40
+I (6164) BLUETOOTH_DRIVER: NORIC UART TX characteristic handle: 44
+I (6170) BLUETOOTH_DRIVER: the gatts demo char length = 3
+I (6175) BLUETOOTH_DRIVER: prf_char[0] =11
+I (6179) BLUETOOTH_DRIVER: prf_char[1] =22
+I (6183) BLUETOOTH_DRIVER: prf_char[2] =33
+I (6187) BLUETOOTH_DRIVER: gatts_event_handler , event= 10
+I (6192) BLUETOOTH_DRIVER: Descriptor add, status 0, attr_handle 45, service_handle 40
+I (6200) BLUETOOTH_DRIVER: gatts_event_handler , event= 10
+I (6205) BLUETOOTH_DRIVER: Descriptor add, status 0, attr_handle 46, service_handle 40
+I (6825) SD_CLEAN: Finished processing leftover .zip files
+I (10771) WifiStation: Found AP: AIQI-WORK, BSSID: 78:44:fd:ff:2d:97, RSSI: -47, Channel: 10, Authmode: 4
+I (10771) WifiStation: Found AP: AIQI-WORK, BSSID: 78:44:fd:ff:24:eb, RSSI: -61, Channel: 6, Authmode: 4
+I (10779) WifiStation: Found AP: AIQI-WORK, BSSID: 78:44:fd:ff:25:37, RSSI: -66, Channel: 2, Authmode: 4
+I (10788) WifiBoard: WiFi connecting to AIQI-WORK
+I (10807) H_API: esp_wifi_remote_connect
+I (12012) EmojiConfig: Library match: normal -> selected random emoji: playful
+I (12013) Application: Idle: playing next emoji: playful
+I (12013) LcdDisplay: PlayEmojiInternal: playful, path: /playful, audio: 1
+I (12021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/playful
+I (12033) JsonEmojiPlayer: Started emoji: playful, path: /playful, total_frames: 80
+I (12036) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (12045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (12052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (12058) ServoController: SetSpeedLimit: 50 -> 50
+I (12062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (12068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (12600) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (13604) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (15016) SystemInfo: Heap Stats - Internal: 196 KB (min: 193 KB), Used: 65.6%; SPIRAM: 26780 KB (min: 26344 KB), Used: 6.1%
+I (15631) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (15633) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -27.5)
+I (15636) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (15942) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x4824554e
+I (16015) AudioCodec: Set input enable to false
+I (16020) AudioCodec: Set output enable to false
+I (16025) EmojiConfig: Library match: normal -> selected random emoji: makeFace
+I (16025) Application: Idle: playing next emoji: makeFace
+I (16026) LcdDisplay: PlayEmojiInternal: makeFace, path: /makeFace, audio: 1
+I (16034) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeFace
+I (16048) JsonEmojiPlayer: Started emoji: makeFace, path: /makeFace, total_frames: 92
+I (16049) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,RIGHT_50
+I (16056) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (16063) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (16069) ServoController: SetSpeedLimit: 50 -> 50
+I (16073) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (16080) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (16551) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (16956) esp_netif_handlers: sta ip: 172.16.2.224, mask: 255.255.255.0, gw: 172.16.2.1
+I (16956) WifiStation: Got IP: 172.16.2.224
+I (16956) WifiBoard: Connected to WiFi: AIQI-WORK
+I (16961) Application: Network connected
+I (16965) StateMachine: State: starting -> activating
+I (16980) EmojiConfig: Checking for emoji config update...
+I (16980) Ota: Current version: 1.1.4
+I (16981) Ota: Setup HTTP, User-Agent: waveshare-p4-wifi6-touch-lcd-4b/1.1.4, Device-Id: 30:ed:a0:e1:e2:f4, Client-Id: 1247c817-6016-4398-858d-c1f0fafa3a9b, Activation-Version: 1
+I (16982) Application: CheckAutoBrightness: Auto brightness disabled
+I (16994) Ota: Request JSON: {"version":2,"language":"zh-CN","flash_size":33554432,"minimum_free_heap_size":"27090516","mac_address":"30:ed:a0:e1:e2:f4","uuid":"1247c817-6016-4398-858d-c1f0fafa3a9b","chip_model_name":"esp32p4","chip_info":{"model":18,"cores":2,"revision":100,"features":0},"application":{"name":"Carjoy","version":"1.1.4","compile_time":"Apr 17 2026T14:38:17Z","idf_version":"30aaf645-dirty","elf_sha256":"55fd00d1fe049bbb594cd7921d93adb13c6fffd7ad2e7eab578f1a5e9d808c4d"},"partition_table": [{"label":"nvsfactory","type":1,"subtype":2,"address":36864,"size":204800},{"label":"nvs","type":1,"subtype":2,"address":241664,"size":860160},{"label":"otadata","type":1,"subtype":0,"address":1101824,"size":8192},{"label":"phy_init","type":1,"subtype":1,"address":1110016,"size":4096},{"label":"ota_0","type":0,"subtype":16,"address":1114112,"size":8388608},{"label":"ota_1","type":0,"subtype":17,"address":9502720,"size":8388608},{"label":"assets","type":1,"subtype":130,"address":17891328,"size":8388608}],"ota":{"label":"ota_0"},"display":{"monochrome":false,"width":410,"height":502},"board":{"type":"wifi", "subtype": "touch_lcd_4b"}}
+I (17294) HttpClient: Established new connection to 47.96.89.62:8002
+I (17505) HttpClient: HTTP connection closed
+I (17505) Ota: Server response JSON: {"server_time":{"timestamp":1776411702695,"timeZone":"GMT+08:00","timezone_offset":480},"firmware":{"version":"1.1.4","url":"http://xiaozhi.server.com:8002/xiaozhi/otaMag/download/NOT_ACTIVATED_FIRMWARE_THIS_IS_A_INVALID_URL"},"websocket":{"url":"ws://47.96.89.62:8000/xiaozhi/v1/","token":"48cHuM6ocLcoC_VJJl5_vzTbo4UE8__WdsvToovFrrc.1776411702"}}
+I (17532) Ota: No mqtt section found !
+I (17543) Ota: Current is the latest version
+I (17548) Application: Activation done
+I (17548) SystemInfo: Heap Stats - Internal: 194 KB (min: 165 KB), Used: 66.0%; SPIRAM: 26779 KB (min: 26333 KB), Used: 6.1%
+I (17554) StateMachine: State: activating -> idle
+I (17554) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (17564) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+E (17576) i2s_common: i2s_channel_disable(1217): the channel has not been enabled yet
+I (17583) I2S_IF: channel mode 0 bits:16/16 channel:2 mask:1
+W (17584) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (17603) I2S_IF: STD Mode 1 bits:16/16 channel:2 sample_rate:24000 mask:1
+I (17632) Adev_Codec: Open codec device OK
+I (17632) AudioCodec: Set output enable to true
+I (17632) AudioService: OpusHead: version=1, channels=1, sample_rate=16000
+I (17636) AudioService: Resampling audio from 16000 to 24000
+I (17641) OpusResampler: Resampler configured with input sample rate 16000 and output sample rate 24000
+I (17638) ImuProcessor: Gesture: Turn Left (Gyro Y: -106.61)
+I (17640) WifiStation: Setting WiFi power save level: LOW_POWER (MAX_MODEM)
+I (17685) Application: Wake word triggered2: 0
+I (17685) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (17686) LcdDisplay: SetEmotion: leftT, audio: 1
+W (17691) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (17712) LcdDisplay: Emoji not found for: leftT
+I (20174) JsonEmojiPlayer: Stop after current loop: 1
+W (20188) JsonEmojiPlayer: Interrupted while waiting for target 20.0
+I (20188) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (20235) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (20235) EmojiConfig: Library match: normal -> selected random emoji: laugh
+I (20238) LcdDisplay: PlayEmojiInternal: laugh, path: /laugh, audio: 1
+I (20246) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/laugh
+I (20258) JsonEmojiPlayer: Started emoji: laugh, path: /laugh, total_frames: 120
+I (20259) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (20268) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (20275) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (20281) ServoController: SetSpeedLimit: 50 -> 50
+I (20285) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (20291) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (20781) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (21784) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (24794) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (24794) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (24876) ImuProcessor: Gesture: Turn Left (Gyro Y: -106.12)
+I (24886) LcdDisplay: SetEmotion: leftT, audio: 1
+W (24886) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (24887) LcdDisplay: Emoji not found for: leftT
+I (25470) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+W (25652) JsonEmojiPlayer: [ServoSequence] Interrupted during 1s pause
+I (25652) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (25655) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.8)
+I (25663) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (26012) EmojiConfig: Library match: normal -> selected random emoji: makeFace
+I (26013) Application: Idle: playing next emoji: makeFace
+I (26014) LcdDisplay: PlayEmojiInternal: makeFace, path: /makeFace, audio: 1
+I (26021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeFace
+I (26034) JsonEmojiPlayer: Started emoji: makeFace, path: /makeFace, total_frames: 92
+I (26037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (26045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (26052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (26058) ServoController: SetSpeedLimit: 50 -> 50
+I (26063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (26069) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (26603) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (27609) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (29018) SystemInfo: Heap Stats - Internal: 194 KB (min: 165 KB), Used: 66.0%; SPIRAM: 26780 KB (min: 26333 KB), Used: 6.1%
+I (30178) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (30180) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -27.3)
+I (30183) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (31012) EmojiConfig: Library match: normal -> selected random emoji: makeFace
+I (31015) Application: Idle: playing next emoji: makeFace
+I (31015) LcdDisplay: PlayEmojiInternal: makeFace, path: /makeFace, audio: 1
+I (31021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeFace
+I (31034) JsonEmojiPlayer: Started emoji: makeFace, path: /makeFace, total_frames: 92
+I (31037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (31045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (31052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (31058) ServoController: SetSpeedLimit: 50 -> 50
+I (31063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (31069) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (31563) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (32566) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (34581) AudioCodec: Set output enable to false
+I (35173) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (35175) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -28.5)
+I (35178) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (36012) EmojiConfig: Library match: normal -> selected random emoji: drink
+I (36014) Application: Idle: playing next emoji: drink
+I (36014) LcdDisplay: PlayEmojiInternal: drink, path: /drink, audio: 1
+I (36020) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/drink
+I (36036) JsonEmojiPlayer: Started emoji: drink, path: /drink, total_frames: 170
+I (36036) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_20,RIGHT_40
+I (36042) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (36049) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (36055) ServoController: SetSpeedLimit: 50 -> 50
+I (36059) JsonEmojiPlayer: Executing servo action: type=1, value=20
+I (36065) ServoController: SetTargetAngle: 输入=-20.0, 限制后=-20.0, 目标=-20.0
+I (36388) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (37393) JsonEmojiPlayer: Executing servo action: type=2, value=40
+I (37393) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (37498) ImuProcessor: Gesture: Turn Left (Gyro Y: -102.20)
+I (37498) LcdDisplay: SetEmotion: leftT, audio: 1
+W (37498) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (37505) LcdDisplay: Emoji not found for: leftT
+I (37963) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (38969) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.8)
+I (38970) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (39014) SystemInfo: Heap Stats - Internal: 198 KB (min: 165 KB), Used: 65.2%; SPIRAM: 26780 KB (min: 26333 KB), Used: 6.1%
+I (44013) Application: Idle: playing next emoji: wearSun
+I (44013) LcdDisplay: PlayEmojiInternal: wearSun, path: /wearSun, audio: 1
+I (44021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/wearSun
+I (44036) JsonEmojiPlayer: Started emoji: wearSun, path: /wearSun, total_frames: 157
+I (44037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_60,STOP_2000
+I (44045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (44052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (44058) ServoController: SetSpeedLimit: 50 -> 50
+I (44062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (44068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (44622) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (45626) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (48634) JsonEmojiPlayer: Executing servo action: type=2, value=60
+I (48634) ServoController: SetTargetAngle: 输入=30.0, 限制后=30.0, 目标=30.0
+I (48701) ImuProcessor: Gesture: Turn Left (Gyro Y: -104.72)
+I (48701) LcdDisplay: SetEmotion: leftT, audio: 1
+W (48701) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (48706) LcdDisplay: Emoji not found for: leftT
+I (49012) SystemInfo: Heap Stats - Internal: 194 KB (min: 165 KB), Used: 66.1%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (49385) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (50386) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (52388) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 27.1)
+I (52388) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (52527) ImuProcessor: Gesture: Turn Right (Gyro Y: 100.87)
+I (52528) LcdDisplay: SetEmotion: rightT, audio: 1
+W (52528) EmojiConfig: Scenario/Emoji 'rightT' not found in user owned list
+W (52534) LcdDisplay: Emoji not found for: rightT
+I (55012) EmojiConfig: Library match: normal -> selected random emoji: drink
+I (55013) Application: Idle: playing next emoji: drink
+I (55013) LcdDisplay: PlayEmojiInternal: drink, path: /drink, audio: 1
+I (55020) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/drink
+I (55036) JsonEmojiPlayer: Started emoji: drink, path: /drink, total_frames: 170
+I (55036) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_60,STOP_2000
+I (55043) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (55051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (55056) ServoController: SetSpeedLimit: 50 -> 50
+I (55061) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (55067) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (55623) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (56627) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (59039) SystemInfo: Heap Stats - Internal: 194 KB (min: 165 KB), Used: 66.1%; SPIRAM: 26347 KB (min: 26323 KB), Used: 7.6%
+I (59634) JsonEmojiPlayer: Executing servo action: type=2, value=60
+I (59634) ServoController: SetTargetAngle: 输入=30.0, 限制后=30.0, 目标=30.0
+I (59727) ImuProcessor: Gesture: Turn Left (Gyro Y: -102.83)
+I (59732) LcdDisplay: SetEmotion: leftT, audio: 1
+W (59732) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (59737) LcdDisplay: Emoji not found for: leftT
+I (60433) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (61437) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (62681) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (62683) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 27.3)
+I (62686) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (62830) ImuProcessor: Gesture: Turn Right (Gyro Y: 102.27)
+I (62830) LcdDisplay: SetEmotion: rightT, audio: 1
+W (62830) EmojiConfig: Scenario/Emoji 'rightT' not found in user owned list
+W (62836) LcdDisplay: Emoji not found for: rightT
+I (63012) EmojiConfig: Library match: normal -> selected random emoji: eatBur
+I (63013) Application: Idle: playing next emoji: eatBur
+I (63013) LcdDisplay: PlayEmojiInternal: eatBur, path: /eatBur, audio: 1
+I (63021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/eatBur
+I (63038) JsonEmojiPlayer: Started emoji: eatBur, path: /eatBur, total_frames: 214
+I (63039) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (63044) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (63051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (63057) ServoController: SetSpeedLimit: 50 -> 50
+I (63061) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (63068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (63644) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (64649) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (67661) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (67661) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (67723) ImuProcessor: Gesture: Turn Left (Gyro Y: -101.92)
+I (67732) LcdDisplay: SetEmotion: leftT, audio: 1
+W (67732) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (67733) LcdDisplay: Emoji not found for: leftT
+I (68316) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (69018) SystemInfo: Heap Stats - Internal: 194 KB (min: 165 KB), Used: 66.1%; SPIRAM: 26352 KB (min: 26323 KB), Used: 7.6%
+I (69324) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (71330) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.2)
+I (71331) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (73012) EmojiConfig: Library match: normal -> selected random emoji: blowB
+I (73014) Application: Idle: playing next emoji: blowB
+I (73014) LcdDisplay: PlayEmojiInternal: blowB, path: /blowB, audio: 1
+I (73022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/blowB
+I (73033) JsonEmojiPlayer: Started emoji: blowB, path: /blowB, total_frames: 105
+I (78012) EmojiConfig: Library match: normal -> selected random emoji: makeFace
+I (78014) Application: Idle: playing next emoji: makeFace
+I (78015) LcdDisplay: PlayEmojiInternal: makeFace, path: /makeFace, audio: 1
+I (78021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeFace
+I (78034) JsonEmojiPlayer: Started emoji: makeFace, path: /makeFace, total_frames: 92
+I (78037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (78045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (78052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (78058) ServoController: SetSpeedLimit: 50 -> 50
+I (78063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (78069) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (78620) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (79038) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.1%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (79039) Application: CheckAutoBrightness: Auto brightness disabled
+I (79045) Application: Temperature Check - Internal: 69.8 C, External: 79.7 C, Current: 79.7 C
+I (79625) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (82175) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (82177) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -27.4)
+I (82180) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (83012) EmojiConfig: Library match: normal -> selected random emoji: blowB
+I (83013) Application: Idle: playing next emoji: blowB
+I (83013) LcdDisplay: PlayEmojiInternal: blowB, path: /blowB, audio: 1
+I (83020) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/blowB
+I (83033) JsonEmojiPlayer: Started emoji: blowB, path: /blowB, total_frames: 105
+I (88012) EmojiConfig: Library match: normal -> selected random emoji: gloomy
+I (88013) Application: Idle: playing next emoji: gloomy
+I (88013) LcdDisplay: PlayEmojiInternal: gloomy, path: /gloomy, audio: 1
+I (88024) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/gloomy
+I (88038) JsonEmojiPlayer: Started emoji: gloomy, path: /gloomy, total_frames: 206
+I (88038) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (88044) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (88051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (88057) ServoController: SetSpeedLimit: 50 -> 50
+I (88061) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (88068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (88537) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (89037) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.1%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (89540) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (92551) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (92551) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (92633) ImuProcessor: Gesture: Turn Left (Gyro Y: -105.56)
+I (92634) LcdDisplay: SetEmotion: leftT, audio: 1
+W (92634) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (92642) LcdDisplay: Emoji not found for: leftT
+I (93243) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (94248) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (96257) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 18.8)
+I (96258) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (98013) EmojiConfig: Library match: normal -> selected random emoji: makeFace
+I (98013) Application: Idle: playing next emoji: makeFace
+I (98014) LcdDisplay: PlayEmojiInternal: makeFace, path: /makeFace, audio: 1
+I (98022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeFace
+I (98034) JsonEmojiPlayer: Started emoji: makeFace, path: /makeFace, total_frames: 92
+I (98037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,RIGHT_50
+I (98044) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (98051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (98057) ServoController: SetSpeedLimit: 50 -> 50
+I (98061) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (98067) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (98580) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (99036) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.1%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (99587) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (99587) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (99659) ImuProcessor: Gesture: Turn Left (Gyro Y: -103.74)
+I (99662) LcdDisplay: SetEmotion: leftT, audio: 1
+W (99662) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (99666) LcdDisplay: Emoji not found for: leftT
+I (100245) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (101249) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.7)
+I (101250) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (103012) EmojiConfig: Library match: normal -> selected random emoji: laugh
+I (103013) Application: Idle: playing next emoji: laugh
+I (103013) LcdDisplay: PlayEmojiInternal: laugh, path: /laugh, audio: 1
+I (103020) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/laugh
+I (103034) JsonEmojiPlayer: Started emoji: laugh, path: /laugh, total_frames: 120
+I (103035) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,RIGHT_50
+I (103042) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (103049) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (103055) ServoController: SetSpeedLimit: 50 -> 50
+I (103060) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (103066) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (103620) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (104623) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (104623) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (104694) ImuProcessor: Gesture: Turn Left (Gyro Y: -105.77)
+I (104695) LcdDisplay: SetEmotion: leftT, audio: 1
+W (104695) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (104703) LcdDisplay: Emoji not found for: leftT
+I (105316) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (106323) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.5)
+I (106323) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (109012) SystemInfo: Heap Stats - Internal: 208 KB (min: 165 KB), Used: 63.5%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (109013) EmojiConfig: Library match: normal -> selected random emoji: dExpress
+I (109020) Application: Idle: playing next emoji: dExpress
+I (109025) LcdDisplay: PlayEmojiInternal: dExpress, path: /dExpress, audio: 1
+I (109033) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/dExpress
+I (109049) JsonEmojiPlayer: Started emoji: dExpress, path: /dExpress, total_frames: 192
+I (119012) SystemInfo: Heap Stats - Internal: 198 KB (min: 165 KB), Used: 65.3%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (127012) EmojiConfig: Library match: normal -> selected random emoji: makeFace
+I (127013) Application: Idle: playing next emoji: makeFace
+I (127014) LcdDisplay: PlayEmojiInternal: makeFace, path: /makeFace, audio: 1
+I (127021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeFace
+I (127034) JsonEmojiPlayer: Started emoji: makeFace, path: /makeFace, total_frames: 92
+I (127037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (127046) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (127053) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (127059) ServoController: SetSpeedLimit: 50 -> 50
+I (127063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (127070) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (127622) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (128629) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (129028) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.1%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (131177) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (131179) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -27.4)
+I (131182) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (132013) EmojiConfig: Library match: normal -> selected random emoji: wearSun
+I (132014) Application: Idle: playing next emoji: wearSun
+I (132014) LcdDisplay: PlayEmojiInternal: wearSun, path: /wearSun, audio: 1
+I (132022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/wearSun
+I (132037) JsonEmojiPlayer: Started emoji: wearSun, path: /wearSun, total_frames: 157
+I (132038) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_60,STOP_2000
+I (132046) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (132053) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (132059) ServoController: SetSpeedLimit: 50 -> 50
+I (132064) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (132070) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (132561) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (133566) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (136574) JsonEmojiPlayer: Executing servo action: type=2, value=60
+I (136574) ServoController: SetTargetAngle: 输入=30.0, 限制后=30.0, 目标=30.0
+I (136644) ImuProcessor: Gesture: Turn Left (Gyro Y: -106.12)
+I (136644) LcdDisplay: SetEmotion: leftT, audio: 1
+W (136644) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (136650) LcdDisplay: Emoji not found for: leftT
+I (137334) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (138335) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (139012) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.2%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (139013) Application: CheckAutoBrightness: Auto brightness disabled
+I (139019) Application: Temperature Check - Internal: 68.8 C, External: 79.7 C, Current: 79.7 C
+I (140337) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 27.5)
+I (140337) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (140466) ImuProcessor: Gesture: Turn Right (Gyro Y: 106.26)
+I (140468) LcdDisplay: SetEmotion: rightT, audio: 1
+W (140468) EmojiConfig: Scenario/Emoji 'rightT' not found in user owned list
+W (140475) LcdDisplay: Emoji not found for: rightT
+I (143013) EmojiConfig: Library match: normal -> selected random emoji: wearSun
+I (143013) Application: Idle: playing next emoji: wearSun
+I (143015) LcdDisplay: PlayEmojiInternal: wearSun, path: /wearSun, audio: 1
+I (143021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/wearSun
+I (143036) JsonEmojiPlayer: Started emoji: wearSun, path: /wearSun, total_frames: 157
+I (143037) JsonEmojiPlayer: Selected turn expression: SPEED_50,RIGHT_20,LEFT_40
+I (143044) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (143051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (143057) ServoController: SetSpeedLimit: 50 -> 50
+I (143061) JsonEmojiPlayer: Executing servo action: type=2, value=20
+I (143068) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (143392) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (144395) JsonEmojiPlayer: Executing servo action: type=1, value=40
+I (144395) ServoController: SetTargetAngle: 输入=-20.0, 限制后=-20.0, 目标=-20.0
+I (144984) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (145990) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -17.8)
+I (145991) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (149012) SystemInfo: Heap Stats - Internal: 198 KB (min: 165 KB), Used: 65.4%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (154012) EmojiConfig: Library match: normal -> selected random emoji: blinkE
+I (154013) Application: Idle: playing next emoji: blinkE
+I (154013) LcdDisplay: PlayEmojiInternal: blinkE, path: /blinkE, audio: 1
+I (154021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/blinkE
+I (154030) JsonEmojiPlayer: Started emoji: blinkE, path: /blinkE, total_frames: 20
+I (154036) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (154045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (154052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (154058) ServoController: SetSpeedLimit: 50 -> 50
+I (154062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (154068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (154562) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+W (154943) JsonEmojiPlayer: [ServoSequence] Interrupted during 1s pause
+I (154943) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (154946) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -28.7)
+I (154955) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (155012) EmojiConfig: Library match: normal -> selected random emoji: lookAro
+I (155013) Application: Idle: playing next emoji: lookAro
+I (155013) LcdDisplay: PlayEmojiInternal: lookAro, path: /lookAro, audio: 1
+I (155021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/lookAro
+I (155040) JsonEmojiPlayer: Started emoji: lookAro, path: /lookAro, total_frames: 241
+I (155041) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (155046) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (155053) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (155059) ServoController: SetSpeedLimit: 50 -> 50
+I (155063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (155070) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (155183) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (156187) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (159012) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.2%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (159196) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (159196) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (159277) ImuProcessor: Gesture: Turn Left (Gyro Y: -109.76)
+I (159299) LcdDisplay: SetEmotion: leftT, audio: 1
+W (159300) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (159300) LcdDisplay: Emoji not found for: leftT
+I (159873) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (160880) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (162886) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.9)
+I (162886) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (166012) EmojiConfig: Library match: normal -> selected random emoji: makeH
+I (166013) Application: Idle: playing next emoji: makeH
+I (166013) LcdDisplay: PlayEmojiInternal: makeH, path: /makeH, audio: 1
+I (166021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeH
+I (166034) JsonEmojiPlayer: Started emoji: makeH, path: /makeH, total_frames: 122
+I (166035) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (166044) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (166051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (166057) ServoController: SetSpeedLimit: 50 -> 50
+I (166062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (166068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (166578) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (167580) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (169017) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.2%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (170592) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (170592) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (170671) ImuProcessor: Gesture: Turn Left (Gyro Y: -104.16)
+I (170675) LcdDisplay: SetEmotion: leftT, audio: 1
+W (170675) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (170677) LcdDisplay: Emoji not found for: leftT
+I (171266) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+W (171527) JsonEmojiPlayer: [ServoSequence] Interrupted during 1s pause
+I (171527) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (171530) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.3)
+I (171538) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (172012) EmojiConfig: Library match: normal -> selected random emoji: blowB
+I (172013) Application: Idle: playing next emoji: blowB
+I (172013) LcdDisplay: PlayEmojiInternal: blowB, path: /blowB, audio: 1
+I (172020) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/blowB
+I (172033) JsonEmojiPlayer: Started emoji: blowB, path: /blowB, total_frames: 105
+I (177012) EmojiConfig: Library match: normal -> selected random emoji: dozeOff
+I (177013) Application: Idle: playing next emoji: dozeOff
+I (177014) LcdDisplay: PlayEmojiInternal: dozeOff, path: /dozeOff, audio: 1
+I (177022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/dozeOff
+I (177046) JsonEmojiPlayer: Started emoji: dozeOff, path: /dozeOff, total_frames: 334
+I (179027) SystemInfo: Heap Stats - Internal: 198 KB (min: 165 KB), Used: 65.4%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (189012) SystemInfo: Heap Stats - Internal: 198 KB (min: 165 KB), Used: 65.4%; SPIRAM: 26353 KB (min: 26323 KB), Used: 7.6%
+I (193012) EmojiConfig: Library match: normal -> selected random emoji: drink
+I (193013) Application: Idle: playing next emoji: drink
+I (193013) LcdDisplay: PlayEmojiInternal: drink, path: /drink, audio: 1
+I (193020) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/drink
+I (193036) JsonEmojiPlayer: Started emoji: drink, path: /drink, total_frames: 170
+I (193037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_60,STOP_2000
+I (193044) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (193051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (193057) ServoController: SetSpeedLimit: 50 -> 50
+I (193062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (193068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (193605) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (194608) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (197615) JsonEmojiPlayer: Executing servo action: type=2, value=60
+I (197615) ServoController: SetTargetAngle: 输入=30.0, 限制后=30.0, 目标=30.0
+I (197690) ImuProcessor: Gesture: Turn Left (Gyro Y: -100.80)
+I (197691) LcdDisplay: SetEmotion: leftT, audio: 1
+W (197691) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (197696) LcdDisplay: Emoji not found for: leftT
+I (198392) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (199020) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.2%; SPIRAM: 26353 KB (min: 26323 KB), Used: 7.6%
+I (199020) Application: CheckAutoBrightness: Auto brightness disabled
+I (199026) Application: Temperature Check - Internal: 69.8 C, External: 79.8 C, Current: 79.8 C
+I (199395) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (200681) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (200683) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 26.6)
+I (200686) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (201012) EmojiConfig: Library match: normal -> selected random emoji: gloomy
+I (201013) Application: Idle: playing next emoji: gloomy
+I (201013) LcdDisplay: PlayEmojiInternal: gloomy, path: /gloomy, audio: 1
+I (201021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/gloomy
+I (201038) JsonEmojiPlayer: Started emoji: gloomy, path: /gloomy, total_frames: 206
+I (201039) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,RIGHT_50
+I (201043) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (201050) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (201056) ServoController: SetSpeedLimit: 50 -> 50
+I (201060) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (201067) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (201640) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (202643) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (202643) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (202734) ImuProcessor: Gesture: Turn Left (Gyro Y: -100.66)
+I (202736) LcdDisplay: SetEmotion: leftT, audio: 1
+W (202736) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (202745) LcdDisplay: Emoji not found for: leftT
+I (203323) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (204328) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.7)
+I (204328) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (209026) SystemInfo: Heap Stats - Internal: 197 KB (min: 165 KB), Used: 65.4%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (211013) EmojiConfig: Library match: normal -> selected random emoji: gloomy
+I (211014) Application: Idle: playing next emoji: gloomy
+I (211014) LcdDisplay: PlayEmojiInternal: gloomy, path: /gloomy, audio: 1
+I (211021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/gloomy
+I (211039) JsonEmojiPlayer: Started emoji: gloomy, path: /gloomy, total_frames: 206
+I (211040) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (211046) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (211053) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (211059) ServoController: SetSpeedLimit: 50 -> 50
+I (211063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (211069) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (211585) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (212588) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (215598) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (215598) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (215673) ImuProcessor: Gesture: Turn Left (Gyro Y: -106.47)
+I (215676) LcdDisplay: SetEmotion: leftT, audio: 1
+W (215677) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (215679) LcdDisplay: Emoji not found for: leftT
+I (216272) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (217274) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (219029) SystemInfo: Heap Stats - Internal: 193 KB (min: 165 KB), Used: 66.2%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (219280) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.0)
+I (219280) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (221012) EmojiConfig: Library match: normal -> selected random emoji: wearSun
+I (221013) Application: Idle: playing next emoji: wearSun
+I (221014) LcdDisplay: PlayEmojiInternal: wearSun, path: /wearSun, audio: 1
+I (221022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/wearSun
+I (221036) JsonEmojiPlayer: Started emoji: wearSun, path: /wearSun, total_frames: 157
+I (221037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_60,STOP_2000
+I (221045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (221052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (221058) ServoController: SetSpeedLimit: 50 -> 50
+I (221063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (221069) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (221598) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (222600) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (225608) JsonEmojiPlayer: Executing servo action: type=2, value=60
+I (225608) ServoController: SetTargetAngle: 输入=30.0, 限制后=30.0, 目标=30.0
+I (225683) ImuProcessor: Gesture: Turn Left (Gyro Y: -107.03)
+I (225683) LcdDisplay: SetEmotion: leftT, audio: 1
+W (225683) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (225689) LcdDisplay: Emoji not found for: leftT
+I (226368) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (227369) JsonEmojiPlayer: Executing servo action: type=3, value=2000
+I (229031) SystemInfo: Heap Stats - Internal: 192 KB (min: 165 KB), Used: 66.3%; SPIRAM: 26768 KB (min: 26323 KB), Used: 6.1%
+I (229373) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 27.6)
+I (229374) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (232017) EmojiConfig: Library match: normal -> selected random emoji: dozeOff
+I (232017) Application: Idle: playing next emoji: dozeOff
+I (232018) LcdDisplay: PlayEmojiInternal: dozeOff, path: /dozeOff, audio: 1
+I (232026) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/dozeOff
+I (232049) JsonEmojiPlayer: Started emoji: dozeOff, path: /dozeOff, total_frames: 334
+I (239012) SystemInfo: Heap Stats - Internal: 196 KB (min: 165 KB), Used: 65.6%; SPIRAM: 26775 KB (min: 26323 KB), Used: 6.1%
+I (248012) EmojiConfig: Library match: normal -> selected random emoji: makeFace
+I (248013) Application: Idle: playing next emoji: makeFace
+I (248014) LcdDisplay: PlayEmojiInternal: makeFace, path: /makeFace, audio: 1
+I (248022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeFace
+I (248034) JsonEmojiPlayer: Started emoji: makeFace, path: /makeFace, total_frames: 92
+I (248037) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (248046) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (248053) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (248059) ServoController: SetSpeedLimit: 50 -> 50
+I (248063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (248070) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (248583) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (249013) SystemInfo: Heap Stats - Internal: 192 KB (min: 165 KB), Used: 66.3%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (249588) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (252177) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (252179) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -27.6)
+I (252182) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (253012) EmojiConfig: Library match: normal -> selected random emoji: makeH
+I (253013) Application: Idle: playing next emoji: makeH
+I (253013) LcdDisplay: PlayEmojiInternal: makeH, path: /makeH, audio: 1
+I (253021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeH
+I (253034) JsonEmojiPlayer: Started emoji: makeH, path: /makeH, total_frames: 122
+I (253035) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (253044) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (253051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (253057) ServoController: SetSpeedLimit: 50 -> 50
+I (253062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (253068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (253558) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (254562) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (257573) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (257573) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (257653) ImuProcessor: Gesture: Turn Left (Gyro Y: -102.90)
+I (257664) LcdDisplay: SetEmotion: leftT, audio: 1
+W (257664) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (257666) LcdDisplay: Emoji not found for: leftT
+I (258226) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+W (258528) JsonEmojiPlayer: [ServoSequence] Interrupted during 1s pause
+I (258528) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (258531) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.0)
+I (258539) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (259012) SystemInfo: Heap Stats - Internal: 207 KB (min: 165 KB), Used: 63.7%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (259013) Application: CheckAutoBrightness: Auto brightness disabled
+I (259019) Application: Temperature Check - Internal: 68.8 C, External: 80.0 C, Current: 80.0 C
+I (259029) EmojiConfig: Library match: normal -> selected random emoji: makeH
+I (259034) Application: Idle: playing next emoji: makeH
+I (259039) LcdDisplay: PlayEmojiInternal: makeH, path: /makeH, audio: 1
+I (259046) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeH
+I (259060) JsonEmojiPlayer: Started emoji: makeH, path: /makeH, total_frames: 122
+I (259061) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,RIGHT_50
+I (259068) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (259075) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (259081) ServoController: SetSpeedLimit: 50 -> 50
+I (259085) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (259092) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (259644) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (260647) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (260647) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (260721) ImuProcessor: Gesture: Turn Left (Gyro Y: -102.83)
+I (260721) LcdDisplay: SetEmotion: leftT, audio: 1
+W (260722) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (260731) LcdDisplay: Emoji not found for: leftT
+I (261323) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (262327) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.1)
+I (262328) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (265012) EmojiConfig: Library match: normal -> selected random emoji: rubEyes
+I (265013) Application: Idle: playing next emoji: rubEyes
+I (265014) LcdDisplay: PlayEmojiInternal: rubEyes, path: /rubEyes, audio: 1
+I (265022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/rubEyes
+I (265032) JsonEmojiPlayer: Started emoji: rubEyes, path: /rubEyes, total_frames: 62
+I (265036) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (265045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (265052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (265058) ServoController: SetSpeedLimit: 50 -> 50
+I (265063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (265069) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (265623) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (266625) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (267830) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (267832) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -27.6)
+I (267835) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (268012) EmojiConfig: Library match: normal -> selected random emoji: blowB
+I (268013) Application: Idle: playing next emoji: blowB
+I (268013) LcdDisplay: PlayEmojiInternal: blowB, path: /blowB, audio: 1
+I (268020) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/blowB
+I (268033) JsonEmojiPlayer: Started emoji: blowB, path: /blowB, total_frames: 105
+I (268035) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -20.6)
+I (268045) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (269037) SystemInfo: Heap Stats - Internal: 197 KB (min: 165 KB), Used: 65.5%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (273012) EmojiConfig: Library match: normal -> selected random emoji: makeH
+I (273013) Application: Idle: playing next emoji: makeH
+I (273013) LcdDisplay: PlayEmojiInternal: makeH, path: /makeH, audio: 1
+I (273021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeH
+I (273034) JsonEmojiPlayer: Started emoji: makeH, path: /makeH, total_frames: 122
+I (273035) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (273044) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (273051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (273057) ServoController: SetSpeedLimit: 50 -> 50
+I (273062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (273068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (273559) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (274564) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (277572) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (277572) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (277647) ImuProcessor: Gesture: Turn Left (Gyro Y: -109.83)
+I (277661) LcdDisplay: SetEmotion: leftT, audio: 1
+W (277661) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (277662) LcdDisplay: Emoji not found for: leftT
+I (278244) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+W (278526) JsonEmojiPlayer: [ServoSequence] Interrupted during 1s pause
+I (278526) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (278529) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 18.4)
+I (278537) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (279012) SystemInfo: Heap Stats - Internal: 207 KB (min: 165 KB), Used: 63.7%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (279013) EmojiConfig: Library match: normal -> selected random emoji: makeH
+I (279019) Application: Idle: playing next emoji: makeH
+I (279024) LcdDisplay: PlayEmojiInternal: makeH, path: /makeH, audio: 1
+I (279032) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/makeH
+I (279045) JsonEmojiPlayer: Started emoji: makeH, path: /makeH, total_frames: 122
+I (279046) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,RIGHT_50
+I (279053) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (279060) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (279066) ServoController: SetSpeedLimit: 50 -> 50
+I (279071) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (279077) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (279588) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (280592) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (280592) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (280672) ImuProcessor: Gesture: Turn Left (Gyro Y: -108.57)
+I (280673) LcdDisplay: SetEmotion: leftT, audio: 1
+W (280673) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (280679) LcdDisplay: Emoji not found for: leftT
+I (281268) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (282273) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.5)
+I (282273) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (285012) EmojiConfig: Library match: normal -> selected random emoji: lookAro
+I (285015) Application: Idle: playing next emoji: lookAro
+I (285015) LcdDisplay: PlayEmojiInternal: lookAro, path: /lookAro, audio: 1
+I (285021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/lookAro
+I (285040) JsonEmojiPlayer: Started emoji: lookAro, path: /lookAro, total_frames: 241
+I (285041) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,RIGHT_50
+I (285044) JsonEmojiPlayer: Starting servo action task with 3 actions (play_id: 2)
+I (285051) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (285057) ServoController: SetSpeedLimit: 50 -> 50
+I (285062) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (285068) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (285580) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (286587) JsonEmojiPlayer: Executing servo action: type=2, value=50
+I (286587) ServoController: SetTargetAngle: 输入=20.0, 限制后=20.0, 目标=20.0
+I (286661) ImuProcessor: Gesture: Turn Left (Gyro Y: -106.47)
+I (286665) LcdDisplay: SetEmotion: leftT, audio: 1
+W (286665) EmojiConfig: Scenario/Emoji 'leftT' not found in user owned list
+W (286670) LcdDisplay: Emoji not found for: leftT
+I (287261) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (288267) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: 17.7)
+I (288267) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (289040) SystemInfo: Heap Stats - Internal: 197 KB (min: 165 KB), Used: 65.5%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (296012) EmojiConfig: Library match: normal -> selected random emoji: playGame
+I (296013) Application: Idle: playing next emoji: playGame
+I (296014) LcdDisplay: PlayEmojiInternal: playGame, path: /playGame, audio: 1
+I (296022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/playGame
+I (296036) JsonEmojiPlayer: Started emoji: playGame, path: /playGame, total_frames: 126
+I (299033) SystemInfo: Heap Stats - Internal: 197 KB (min: 165 KB), Used: 65.5%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (309033) SystemInfo: Heap Stats - Internal: 197 KB (min: 165 KB), Used: 65.5%; SPIRAM: 26780 KB (min: 26323 KB), Used: 6.1%
+I (312012) EmojiConfig: Library match: normal -> selected random emoji: playGui
+I (312013) Application: Idle: playing next emoji: playGui
+I (312014) LcdDisplay: PlayEmojiInternal: playGui, path: /playGui, audio: 1
+I (312021) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/playGui
+I (312034) JsonEmojiPlayer: Started emoji: playGui, path: /playGui, total_frames: 99
+I (317012) EmojiConfig: Library match: normal -> selected random emoji: playful
+I (317013) Application: Idle: playing next emoji: playful
+I (317014) LcdDisplay: PlayEmojiInternal: playful, path: /playful, audio: 1
+I (317022) JsonEmojiPlayer: Resolved emoji path on SD Card (exact match): /sdcard/image/playful
+I (317033) JsonEmojiPlayer: Started emoji: playful, path: /playful, total_frames: 80
+I (317036) JsonEmojiPlayer: Selected turn expression: SPEED_50,LEFT_30,STOP_3000,RIGHT_50,STOP_2000
+I (317045) JsonEmojiPlayer: Starting servo action task with 5 actions (play_id: 2)
+I (317052) JsonEmojiPlayer: Executing servo action: type=0, value=50
+I (317058) ServoController: SetSpeedLimit: 50 -> 50
+I (317063) JsonEmojiPlayer: Executing servo action: type=1, value=30
+I (317069) ServoController: SetTargetAngle: 输入=-30.0, 限制后=-30.0, 目标=-30.0
+I (317621) JsonEmojiPlayer: [ServoSequence] Action completed. Pausing for 1000 ms before next action...
+I (318625) JsonEmojiPlayer: Executing servo action: type=3, value=3000
+I (319027) SystemInfo: Heap Stats - Internal: 192 KB (min: 165 KB), Used: 66.4%; SPIRAM: 26780 KB (min: 26322 KB), Used: 6.1%
+I (319028) Application: CheckAutoBrightness: Auto brightness disabled
+I (319034) Application: Temperature Check - Internal: 69.8 C, External: 80.1 C, Current: 80.1 C
+E (319046) Application: High temperature detected! Current: 80.1 C, Max: 80.0 C
+E (319062) i2s_common: i2s_channel_disable(1217): the channel has not been enabled yet
+I (319062) I2S_IF: channel mode 0 bits:16/16 channel:2 mask:1
+W (319066) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (319076) I2S_IF: STD Mode 1 bits:16/16 channel:2 sample_rate:24000 mask:1
+I (319113) Adev_Codec: Open codec device OK
+I (319113) AudioCodec: Set output enable to true
+I (319113) AudioService: OpusHead: version=1, channels=1, sample_rate=16000
+I (319120) LcdDisplay: SetEmotion: highT, audio: 1
+W (319121) EmojiConfig: Scenario/Emoji 'highT' not found in user owned list
+W (319129) LcdDisplay: Emoji not found for: highT
+I (319132) Application: High temperature emoji started
+I (320630) JsonEmojiPlayer: Action interrupted, aborting servo actions
+I (320632) JsonEmojiPlayer: Emoji player stopped or sequence ended. Resetting servo angle to 0 (current: -27.5)
+I (320635) ServoController: SetTargetAngle: 输入=0.0, 限制后=0.0, 目标=0.0
+I (324140) Application: Entering fake shutdown state (high_temp: 1)...
+W (324140) AudioService: Audio input task stopped
+W (324140) AudioService: Audio output task stopped
+W (324140) AudioService: Opus codec task stopped
+I (324140) AudioCodec: Set output volume to 0
+I (324159) AudioCodec: Set output enable to false
+I (324159) ImuProcessor: Stopped processing task
+I (324161) Backlight: Set brightness to 0
+I (324165) Application: Display backlight off
+I (324170) WifiStation: Setting WiFi power save level: LOW_POWER (MAX_MODEM)
+I (324181) WifiManager: Stopping station
+I (324181) WifiStation: Stopping WiFi station
+I (324248) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0
+I (324248) WifiManager: Station stopped
+W (324248) WifiBoard: WiFi disconnected
+W (324250) BT_APPL: bta_dm_disable BTA_DISABLE_DELAY set to 200 ms
+I (324577) StateMachine: State: idle -> fake_shutdown
+I (324577) Application: Starting temperature monitoring task in fake shutdown...

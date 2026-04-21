@@ -85,6 +85,7 @@ class ESP32LogTab(BaseCommTab):
         self.read_thread = None
         self.running = False
         self.get_serial_blacklist = get_serial_blacklist or (lambda: [])
+        self.ui_theme = 'dark'  # 默认深色主题
         
         # 保存功能相关变量
         self.is_saving = False
@@ -117,10 +118,7 @@ class ESP32LogTab(BaseCommTab):
         self.toggle_btn = QtWidgets.QPushButton('打开')
         row1_layout.addWidget(self.toggle_btn)
         
-        # 添加保存按钮
-        self.save_btn = QtWidgets.QPushButton('开始保存')
-        self.save_btn.setToolTip('开始实时保存串口接收数据到txt文件')
-        row1_layout.addWidget(self.save_btn)
+        # 保存按钮已移除，改为自动保存
         
         row1_layout.addStretch(1)
         self.top_vbox.addWidget(row1)
@@ -141,6 +139,7 @@ class ESP32LogTab(BaseCommTab):
         row2_layout.setSpacing(6)
         row2_layout.addWidget(QtWidgets.QLabel('日志级别:'))
         self.log_level_checks = {}
+
         for level in ['Error', 'Warning', 'Info', 'Debug', 'Verbose']:
             checkbox = QtWidgets.QCheckBox(level)
             checkbox.setChecked(True)
@@ -148,14 +147,23 @@ class ESP32LogTab(BaseCommTab):
             row2_layout.addWidget(checkbox)
         
         # 日志名称过滤
-        row2_layout.addWidget(QtWidgets.QLabel('日志名称:'))
+        row2_layout.addWidget(QtWidgets.QLabel('过滤日志:'))
         self.log_name_filter_edit = QtWidgets.QLineEdit()
         self.log_name_filter_edit.setPlaceholderText('输入日志名称，如: EmojiConfig,Backlight')
-        self.log_name_filter_edit.setMinimumWidth(200)
+        self.log_name_filter_edit.setMinimumWidth(400)
         row2_layout.addWidget(self.log_name_filter_edit)
         
         row2_layout.addStretch(1)
         self.top_vbox.addWidget(row2)
+
+        # 初始化日志颜色字典
+        self.current_log_colors = {
+            'Error': '#ff0000',    # 红色
+            'Warning': '#EEBE2F',  # 橙色（原#ffa500）
+            'Info': '#50DA56',     # 绿色（原#20A826）
+            'Debug': '#0000ff',    # 蓝色
+            'Verbose': '#800080'   # 紫色
+        }
 
         # 查找功能已移至第一行
 
@@ -196,7 +204,6 @@ class ESP32LogTab(BaseCommTab):
         self.refresh_btn.clicked.connect(self._refresh_ports)
         self.toggle_btn.clicked.connect(self._toggle)
         self.search_btn.clicked.connect(self._search_logs)
-        self.save_btn.clicked.connect(self._save_logs)
 
         self.log_batch_received.connect(self._update_log_from_batch)
         
@@ -205,6 +212,11 @@ class ESP32LogTab(BaseCommTab):
         self.recv_text.customContextMenuRequested.connect(self._show_recv_context_menu)
 
         self._refresh_ports()
+        # 创建自动刷新定时器（每500毫秒刷新一次）
+        self.refresh_timer = QtCore.QTimer(self)
+        self.refresh_timer.timeout.connect(self._refresh_ports)
+        self.refresh_timer.start(500)
+        
         self._install_autosave_hooks()
         # 搜索高亮器
         try:
@@ -254,6 +266,19 @@ class ESP32LogTab(BaseCommTab):
         for level, checkbox in self.log_level_checks.items():
             checkbox.setChecked(log_levels.get(level, True))
         self.log_name_filter_edit.setText(cfg.get('log_name_filter', ''))
+        
+        # 加载颜色设置
+        log_colors = cfg.get('log_colors', {})
+        default_colors = {
+            'Error': '#ff0000',
+            'Warning': '#EEBE2F',
+            'Info': '#50DA56',
+            'Debug': '#0000ff',
+            'Verbose': '#800080'
+        }
+        for level in ['Error', 'Warning', 'Info', 'Debug', 'Verbose']:
+            color_value = log_colors.get(level, default_colors.get(level, '#000000'))
+            self.current_log_colors[level] = color_value
 
     def get_config(self) -> dict:
         cfg = super().get_config()
@@ -262,28 +287,41 @@ class ESP32LogTab(BaseCommTab):
             'baudrate': self.baud_combo.currentText(),
             'log_levels': {level: checkbox.isChecked() for level, checkbox in self.log_level_checks.items()},
             'log_name_filter': self.log_name_filter_edit.text(),
+            'log_colors': self.current_log_colors.copy(),
         })
         return cfg
 
     def apply_fonts(self, send_font: QtGui.QFont, recv_font: QtGui.QFont):
-        # 强制接收区使用等宽字体，解决对齐问题
-        # 优先使用 Consolas，其次 Courier New
+        # 使用传递的字体，但强制等宽字体属性
         f = QtGui.QFont(recv_font)
-        f.setFamily("Consolas")
         f.setStyleHint(QtGui.QFont.StyleHint.Monospace)
         f.setFixedPitch(True)
-        if not QtGui.QFontInfo(f).exactMatch():
-            f.setFamily("Courier New")
         
         # 调用父类应用字体
         super().apply_fonts(send_font, f)
+    
+    def set_theme(self, theme: str):
+        """设置主题，根据主题调整错误颜色"""
+        self.ui_theme = theme
+        # 根据主题调整错误颜色
+        if theme == 'dark':
+            # 深色主题：错误使用白色字体
+            self.current_log_colors['Error'] = '#ffffff'
+        else:
+            # 浅色主题：错误使用红色字体
+            self.current_log_colors['Error'] = '#ff0000'
 
     def _toggle(self):
         if self.serial is not None and self.serial.is_open:
             self._stop_read_thread()
+            # 自动停止保存日志
+            if self.is_saving:
+                self._stop_saving()
             self.toggle_btn.setText('打开')
             self.port_combo.setEnabled(True)
             self.baud_combo.setEnabled(True)
+            # 重新启动串口自动刷新
+            self.refresh_timer.start(500)
             return
 
         port = self.port_combo.currentData() or self.port_combo.currentText()
@@ -308,7 +346,12 @@ class ESP32LogTab(BaseCommTab):
             self._log(f'[ERROR] {e}', 'red')
             return
 
+        # 停止自动刷新定时器
+        self.refresh_timer.stop()
         self._start_read_thread()
+        # 自动开始保存日志
+        if not self.is_saving:
+            self._start_saving(auto_start=True)
         self.toggle_btn.setText('关闭')
         self.port_combo.setEnabled(False)
         self.baud_combo.setEnabled(False)
@@ -454,23 +497,27 @@ class ESP32LogTab(BaseCommTab):
                         if not text:
                             continue
 
-                        color = 'black'
+                        color = '#000000'  # 黑色默认
                         level = None
                         if text.startswith('E ('):
-                            color = 'red'
                             level = 'Error'
                         elif text.startswith('W ('):
-                            color = 'orange'
                             level = 'Warning'
                         elif text.startswith('I ('):
-                            color = 'green'
                             level = 'Info'
                         elif text.startswith('D ('):
-                            color = 'blue'
                             level = 'Debug'
                         elif text.startswith('V ('):
-                            color = 'purple'
                             level = 'Verbose'
+                        
+                        if level:
+                            # 从自定义颜色字典获取颜色，如果无效则使用默认黑色
+                            color_hex = self.current_log_colors.get(level, '#000000')
+                            # 简单验证十六进制格式
+                            if color_hex and color_hex.startswith('#') and len(color_hex) >= 4:
+                                color = color_hex
+                            else:
+                                color = '#000000'
 
                         if level and not self.log_level_checks[level].isChecked():
                             continue
@@ -504,6 +551,8 @@ class ESP32LogTab(BaseCommTab):
             except serial.SerialException:
                 self._log('[ERROR] 串口断开', 'red')
                 self.running = False
+                # 在主线程中处理断开连接
+                QtCore.QTimer.singleShot(0, self._handle_serial_disconnect)
                 break
 
         if log_batch:
@@ -517,8 +566,28 @@ class ESP32LogTab(BaseCommTab):
         if self.serial and self.serial.is_open:
             self.serial.close()
             self.serial = None
+        
+        # 确保串口自动刷新定时器重新启动
+        self.refresh_timer.start(500)
 
+    def _handle_serial_disconnect(self):
+        """处理串口异常断开"""
+        if self.serial and self.serial.is_open:
+            self.serial.close()
+            self.serial = None
+        self.running = False
+        self.read_thread = None
+        self.toggle_btn.setText('打开')
+        self.port_combo.setEnabled(True)
+        self.baud_combo.setEnabled(True)
+        # 重新启动串口自动刷新
+        self.refresh_timer.start(500)
+    
     def _refresh_ports(self):
+        # 如果串口已打开，跳过刷新
+        if self.serial and self.serial.is_open:
+            return
+            
         current_port = self.port_combo.currentData() or self.port_combo.currentText()
         self.port_combo.clear()
         bl = []
@@ -526,18 +595,37 @@ class ESP32LogTab(BaseCommTab):
             bl = list(self.get_serial_blacklist() or [])
         except Exception:
             bl = []
-        ports = serial.tools.list_ports.comports()
+        ports = list(serial.tools.list_ports.comports())
+        # 按COM端口号降序排序（新插入的设备通常有更高的COM号）
+        def port_sort_key(info):
+            device = info.device
+            # 提取数字部分，如"COM3" -> 3
+            if device.upper().startswith('COM'):
+                try:
+                    return int(device[3:])
+                except ValueError:
+                    return 0
+            return 0
+        
+        ports.sort(key=port_sort_key, reverse=True)  # 降序，COM号大的在前面
+        
         for info in ports:
             if info.device in bl:
                 continue
             label = f"{info.device} - {getattr(info, 'description', None) or getattr(info, 'hwid', '')}"
             self.port_combo.addItem(label, info.device)
         
+        found_current = False
         if current_port:
             for i in range(self.port_combo.count()):
                 if self.port_combo.itemData(i) == current_port:
                     self.port_combo.setCurrentIndex(i)
+                    found_current = True
                     break
+        
+        # 如果没有当前选中的端口，或者当前选中的端口已不存在，自动选择第一个可用端口
+        if not found_current and self.port_combo.count() > 0:
+            self.port_combo.setCurrentIndex(0)
 
     def _show_recv_context_menu(self, pos):
         """显示接收区域的右键菜单"""
@@ -587,17 +675,29 @@ class ESP32LogTab(BaseCommTab):
             # 停止保存
             self._stop_saving()
     
-    def _start_saving(self):
-        """开始实时保存"""
-        # 让用户选择保存目录
-        save_dir = QtWidgets.QFileDialog.getExistingDirectory(
-            self, 
-            '选择保存目录', 
-            os.path.expanduser('~')  # 默认为用户主目录
-        )
+    def _start_saving(self, auto_start=False):
+        """开始实时保存
         
-        if not save_dir:
-            return  # 用户取消了选择
+        Args:
+            auto_start: 是否自动开始保存（使用默认目录）
+        """
+        if not auto_start:
+            # 手动选择目录（保留此功能以备后用）
+            save_dir = QtWidgets.QFileDialog.getExistingDirectory(
+                self, 
+                '选择保存目录', 
+                os.path.expanduser('~')  # 默认为用户主目录
+            )
+            
+            if not save_dir:
+                return  # 用户取消了选择
+        else:
+            # 自动保存：使用默认目录
+            # 创建logs目录（在程序目录下）
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(base_dir)
+            save_dir = os.path.join(project_root, 'logs')
+            os.makedirs(save_dir, exist_ok=True)
         
         # 生成文件名：ESP32_Log_YYYYMMDD_HHMMSS.txt
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -618,8 +718,6 @@ class ESP32LogTab(BaseCommTab):
             
             # 更新状态
             self.is_saving = True
-            self.save_btn.setText('停止保存')
-            self.save_btn.setToolTip('停止保存串口数据')
             
             # 在接收区域显示保存开始信息
             self._log(f'[INFO] 开始保存日志至: {self.save_filepath}', 'green')
@@ -655,8 +753,6 @@ class ESP32LogTab(BaseCommTab):
         
         # 更新状态
         self.is_saving = False
-        self.save_btn.setText('开始保存')
-        self.save_btn.setToolTip('开始实时保存串口接收数据到txt文件')
         self.save_filepath = None
 
     def shutdown(self):
