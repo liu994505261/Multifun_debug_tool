@@ -91,6 +91,7 @@ class ESP32LogTab(BaseCommTab):
         self.is_saving = False
         self.save_file = None
         self.save_filepath = None
+        self.auto_save = True
 
         # 串口配置
         self.top_group.setTitle('ESP32 日志')
@@ -118,7 +119,14 @@ class ESP32LogTab(BaseCommTab):
         self.toggle_btn = QtWidgets.QPushButton('打开')
         row1_layout.addWidget(self.toggle_btn)
         
-        # 保存按钮已移除，改为自动保存
+        self.open_log_dir_btn = QtWidgets.QPushButton('打开日志目录')
+        self.open_log_dir_btn.setToolTip('在资源管理器中打开日志保存目录')
+        row1_layout.addWidget(self.open_log_dir_btn)
+        
+        self.save_log_once_btn = QtWidgets.QPushButton('保存日志')
+        self.save_log_once_btn.setToolTip('单次保存当前日志到文件')
+        self.save_log_once_btn.setVisible(False)
+        row1_layout.addWidget(self.save_log_once_btn)
         
         row1_layout.addStretch(1)
         self.top_vbox.addWidget(row1)
@@ -204,6 +212,8 @@ class ESP32LogTab(BaseCommTab):
         self.refresh_btn.clicked.connect(self._refresh_ports)
         self.toggle_btn.clicked.connect(self._toggle)
         self.search_btn.clicked.connect(self._search_logs)
+        self.open_log_dir_btn.clicked.connect(self._open_log_dir)
+        self.save_log_once_btn.clicked.connect(self._save_logs_once)
 
         self.log_batch_received.connect(self._update_log_from_batch)
         
@@ -311,6 +321,11 @@ class ESP32LogTab(BaseCommTab):
             # 浅色主题：错误使用红色字体
             self.current_log_colors['Error'] = '#ff0000'
 
+    def set_auto_save(self, enable: bool):
+        """设置是否自动保存日志"""
+        self.auto_save = enable
+        self.save_log_once_btn.setVisible(not enable)
+
     def _toggle(self):
         if self.serial is not None and self.serial.is_open:
             self._stop_read_thread()
@@ -350,7 +365,7 @@ class ESP32LogTab(BaseCommTab):
         self.refresh_timer.stop()
         self._start_read_thread()
         # 自动开始保存日志
-        if not self.is_saving:
+        if self.auto_save and not self.is_saving:
             self._start_saving(auto_start=True)
         self.toggle_btn.setText('关闭')
         self.port_combo.setEnabled(False)
@@ -499,15 +514,26 @@ class ESP32LogTab(BaseCommTab):
 
                         color = '#000000'  # 黑色默认
                         level = None
-                        if text.startswith('E ('):
+                        
+                        # 支持两种格式：
+                        # 1. "I (xxxx) xxx: ..."
+                        # 2. "[11:43:00.872] I (xxxx) xxx: ..."
+                        level_text = text
+                        if text.startswith('['):
+                            # 跳过时间戳前缀如 "[11:43:00.872] "
+                            idx = text.find('] ')
+                            if idx != -1:
+                                level_text = text[idx + 2:]
+                        
+                        if level_text.startswith('E ('):
                             level = 'Error'
-                        elif text.startswith('W ('):
+                        elif level_text.startswith('W ('):
                             level = 'Warning'
-                        elif text.startswith('I ('):
+                        elif level_text.startswith('I ('):
                             level = 'Info'
-                        elif text.startswith('D ('):
+                        elif level_text.startswith('D ('):
                             level = 'Debug'
-                        elif text.startswith('V ('):
+                        elif level_text.startswith('V ('):
                             level = 'Verbose'
                         
                         if level:
@@ -740,13 +766,6 @@ class ESP32LogTab(BaseCommTab):
                 # 在接收区域显示保存完成信息
                 self._log(f'[INFO] 日志保存完成: {self.save_filepath}', 'green')
                 
-                # 显示成功消息
-                QtWidgets.QMessageBox.information(
-                    self, 
-                    '保存完成', 
-                    f'日志已成功保存至:\n{self.save_filepath}'
-                )
-                
             except Exception as e:
                 error_msg = f'停止保存失败: {str(e)}'
                 self._log(f'[ERROR] {error_msg}', 'red')
@@ -754,6 +773,100 @@ class ESP32LogTab(BaseCommTab):
         # 更新状态
         self.is_saving = False
         self.save_filepath = None
+
+    def _open_log_dir(self):
+        """在资源管理器中打开日志保存目录"""
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(base_dir)
+        log_dir = os.path.join(project_root, 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        os.startfile(log_dir)
+
+    def _save_logs_once(self):
+        """单次保存当前日志内容到文件"""
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(base_dir)
+        default_dir = os.path.join(project_root, 'logs')
+        os.makedirs(default_dir, exist_ok=True)
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        default_filename = f'ESP32_Log_{timestamp}.txt'
+        
+        filepath, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, '保存日志', os.path.join(default_dir, default_filename),
+            '文本文件 (*.txt);;所有文件 (*)'
+        )
+        if not filepath:
+            return
+        
+        try:
+            content = self.recv_text.toPlainText()
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(f'ESP32 日志文件\n')
+                f.write(f'保存时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
+                f.write(f'串口: {self.port_combo.currentText()}\n')
+                f.write(f'波特率: {self.baud_combo.currentText()}\n')
+                f.write('=' * 50 + '\n\n')
+                f.write(content)
+            
+            self._log(f'[INFO] 日志已保存至: {filepath}', 'green')
+        except Exception as e:
+            self._log(f'[ERROR] 保存失败: {str(e)}', 'red')
+
+    def _import_log_file(self, filepath: str):
+        """导入日志文件并带颜色显示"""
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+        except UnicodeDecodeError:
+            try:
+                with open(filepath, 'r', encoding='gbk') as f:
+                    lines = f.readlines()
+            except Exception as e:
+                self._log(f'[ERROR] 读取文件失败: {str(e)}', 'red')
+                return
+        except Exception as e:
+            self._log(f'[ERROR] 读取文件失败: {str(e)}', 'red')
+            return
+
+        # 先清空当前内容
+        self.recv_text.clear()
+        self.current_recv_bytes = 0
+
+        for line in lines:
+            text = line.rstrip('\n\r')
+            if not text:
+                continue
+
+            level = None
+            level_text = text
+            if text.startswith('['):
+                idx = text.find('] ')
+                if idx != -1:
+                    level_text = text[idx + 2:]
+
+            if level_text.startswith('E ('):
+                level = 'Error'
+            elif level_text.startswith('W ('):
+                level = 'Warning'
+            elif level_text.startswith('I ('):
+                level = 'Info'
+            elif level_text.startswith('D ('):
+                level = 'Debug'
+            elif level_text.startswith('V ('):
+                level = 'Verbose'
+
+            if level:
+                color_hex = self.current_log_colors.get(level, '#000000')
+                if not (color_hex and color_hex.startswith('#') and len(color_hex) >= 4):
+                    color_hex = '#000000'
+            else:
+                color_hex = '#000000'
+
+            self._log(text, color_hex)
+
+        self.lines_value.setText(f"{self.recv_text.document().blockCount()}/{self.max_recv_lines}")
+        self._log(f'[INFO] 已导入日志文件: {filepath}', 'green')
 
     def shutdown(self):
         super().shutdown()

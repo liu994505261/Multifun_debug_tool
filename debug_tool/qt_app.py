@@ -66,6 +66,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.global_format = self.config.get('format', 'ASCII')
         self.serial_blacklist = list(self.config.get('serial_blacklist', []))
         self.ui_theme = (self.config.get('ui', {}) or {}).get('theme', 'dark')
+        self.auto_save_log = self.config.get('auto_save_log', True)
 
         # 恢复窗口几何（位置/大小/最大化）
         try:
@@ -121,6 +122,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.analyzer_tab.load_config(self.config.get('analyzer', {}))
         self.esp32_log_tab.load_config(self.config.get('esp32_log', {}))
         self.esp32_flash_tab.load_config(self.config.get('esp32_flash', {}))
+
+        # 初始化自动保存日志状态
+        self.esp32_log_tab.set_auto_save(self.auto_save_log)
 
         self.tcp_tab.apply_fonts(self.send_font, self.recv_font)
         self.udp_tab.apply_fonts(self.send_font, self.recv_font)
@@ -209,6 +213,8 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.addAction('退出', self.close)
 
         settings_menu = menu.addMenu('设置')
+        settings_menu.addAction('导入日志...', self._import_log_to_esp32)
+        settings_menu.addSeparator()
         settings_menu.addAction('字体大小...', self._show_font_settings)
         settings_menu.addAction('串口黑名单...', self._show_serial_blacklist_settings)
         settings_menu.addAction('日志颜色设置...', self._show_log_color_settings)
@@ -217,6 +223,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dark_theme_action.setChecked(self.ui_theme == 'dark')
         self.dark_theme_action.toggled.connect(self._on_dark_theme_toggled)
         settings_menu.addAction(self.dark_theme_action)
+
+        self.auto_save_log_action = QtGui.QAction('自动保存日志', self)
+        self.auto_save_log_action.setCheckable(True)
+        self.auto_save_log_action.setChecked(self.auto_save_log)
+        self.auto_save_log_action.toggled.connect(self._on_auto_save_log_toggled)
+        settings_menu.addAction(self.auto_save_log_action)
 
         help_menu = menu.addMenu('帮助')
         help_menu.addAction('检查更新', self._manual_check_update)
@@ -312,6 +324,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self._apply_theme(self.ui_theme)
         self._schedule_save()
     
+    def _on_auto_save_log_toggled(self, checked: bool):
+        self.auto_save_log = checked
+        try:
+            self.esp32_log_tab.set_auto_save(checked)
+        except Exception:
+            pass
+        self._schedule_save()
+    
     def get_serial_blacklist(self) -> list:
         return list(self.serial_blacklist or [])
 
@@ -374,6 +394,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # 全局格式
         cfg['format'] = self.global_format
         cfg['serial_blacklist'] = list(self.serial_blacklist or [])
+        cfg['auto_save_log'] = self.auto_save_log
         # 保存当前打开的tab页面索引
         cfg['last_active_tab'] = self.tabs.currentIndex()
         # UI 字体
@@ -420,6 +441,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.global_format = self.config.get('format', 'ASCII')
         self.serial_blacklist = list(self.config.get('serial_blacklist', []))
         self.ui_theme = (self.config.get('ui', {}) or {}).get('theme', 'light')
+        self.auto_save_log = self.config.get('auto_save_log', True)
+        self.auto_save_log_action.setChecked(self.auto_save_log)
+        self.esp32_log_tab.set_auto_save(self.auto_save_log)
         self.format_combo.setCurrentText(self.global_format)
         # 字体应用
         self.send_font = self._get_ui_font('send_font', default_family='Consolas', default_size=18)
@@ -498,6 +522,21 @@ class MainWindow(QtWidgets.QMainWindow):
         apply_btn.clicked.connect(do_apply)
         cancel_btn.clicked.connect(dlg.reject)
         dlg.exec()
+
+    def _import_log_to_esp32(self):
+        """导入ESP32日志文件并显示在日志标签页"""
+        filepath, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, '导入ESP32日志', '',
+            '文本文件 (*.txt *.log);;所有文件 (*)'
+        )
+        if not filepath:
+            return
+        # 切换到ESP32日志标签页
+        for i in range(self.tabs.count()):
+            if self.tabs.widget(i) is self.esp32_log_tab:
+                self.tabs.setCurrentIndex(i)
+                break
+        self.esp32_log_tab._import_log_file(filepath)
 
     def _show_log_color_settings(self):
         # 获取当前颜色设置

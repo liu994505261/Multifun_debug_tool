@@ -121,10 +121,6 @@ class BaseCommTab(QtWidgets.QWidget):
         self.lines_value = QtWidgets.QLabel('0')
         stats_bar.addWidget(self.lines_value)
         stats_bar.addSpacing(10)
-        stats_bar.addWidget(QtWidgets.QLabel('大小:'))
-        self.bytes_value = QtWidgets.QLabel('0/10KB')
-        stats_bar.addWidget(self.bytes_value)
-        stats_bar.addSpacing(10)
         stats_bar.addWidget(QtWidgets.QLabel('总计:'))
         self.total_value = QtWidgets.QLabel('0B')
         stats_bar.addWidget(self.total_value)
@@ -150,7 +146,6 @@ class BaseCommTab(QtWidgets.QWidget):
 
         self.total_recv_bytes = 0
         self.current_recv_bytes = 0
-        self.max_recv_bytes = 10 * 1024
         self._prev_total_bytes = 0
         self._speed_timer = QtCore.QTimer(self)
         self._speed_timer.setInterval(1000)
@@ -285,8 +280,15 @@ class BaseCommTab(QtWidgets.QWidget):
 
         if self.auto_scroll_cb.isChecked():
             self.recv_text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
-        if self.recv_text.document().blockCount() > self.max_recv_lines:
-            self.recv_text.clear()
+        if self.recv_text.document().blockCount() > self.max_recv_lines * 2:
+            # 移除文档开头的旧块，保留最新的 max_recv_lines 行
+            cursor = QtGui.QTextCursor(self.recv_text.document())
+            cursor.movePosition(QtGui.QTextCursor.MoveOperation.Start)
+            block = self.recv_text.document().findBlockByNumber(self.max_recv_lines)
+            if block.isValid():
+                cursor.setPosition(block.position(), QtGui.QTextCursor.MoveMode.KeepAnchor)
+                cursor.removeSelectedText()
+                cursor.deleteChar()
             self.current_recv_bytes = 0
         try:
             self.lines_value.setText(f"{self.recv_text.document().blockCount()}/{self.max_recv_lines}")
@@ -343,9 +345,6 @@ class BaseCommTab(QtWidgets.QWidget):
         try:
             self.current_recv_bytes += int(byte_count or 0)
             self.total_recv_bytes += int(byte_count or 0)
-            cur = self._format_size(self.current_recv_bytes)
-            maxs = self._format_size(self.max_recv_bytes)
-            self.bytes_value.setText(f"{cur}/{maxs}")
             self.total_value.setText(self._format_size(self.total_recv_bytes))
         except Exception:
             pass
@@ -374,7 +373,6 @@ class BaseCommTab(QtWidgets.QWidget):
         self.recv_text.clear()
         self.current_recv_bytes = 0
         self.lines_value.setText(f"0/{self.max_recv_lines}")
-        self.bytes_value.setText(f"0/{self._format_size(self.max_recv_bytes)}")
 
     def _on_send_clicked(self, idx: int):
         pass
